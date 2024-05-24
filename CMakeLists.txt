@@ -226,7 +226,7 @@ endif()
 # Project modules
 # ------------------------------------------------------------------------------
 
-# Add project modules here
+add_subdirectory(dzrcobs)
 
 # ------------------------------------------------------------------------------
 # Code analyzers: clang-tidy, cppcheck, valgrind, sanitizers, etc...
