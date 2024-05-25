@@ -146,24 +146,23 @@ configure_file(.clangd.in ${CMAKE_SOURCE_DIR}/.clangd @ONLY)
 include(CTest)
 
 if(ASAP_BUILD_TESTS)
-  include(GoogleSanitizers)
+
   include(CodeCoverage)
+
   # Enable this target when the project has test cases
   asap_add_code_coverage_all_targets()
+
   include(Valgrind)
 
   cpmaddpackage(
     NAME
-    googletest
+    CppUTest
     GIT_TAG
-    main
+    master
     GITHUB_REPOSITORY
-    google/googletest
+    cpputest/cpputest
     OPTIONS
-    "gtest_force_shared_crt ON"
-    "INSTALL_GTEST OFF")
-
-  include(GoogleTest)
+    "TESTS OFF")
 endif()
 
 # ------------------------------------------------------------------------------

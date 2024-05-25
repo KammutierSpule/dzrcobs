@@ -294,4 +294,7 @@
   },
   "terminal.integrated.enableVisualBell": true,
   "files.trimTrailingWhitespace": false,
+  "cpputestTestAdapter.testExecutable": "${workspaceFolder}/out/build/dev-linux/bin/dzrcobs_test;${workspaceFolder}/out/build/dev-linux/bin/dzrcobs_test.exe",
+  "cpputestTestAdapter.testExecutablePath": "${workspaceFolder}/out/build/dev-linux/bin/",
+  "memory-view.showMemoryPanel": true,
 }

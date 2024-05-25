@@ -6,7 +6,7 @@
       "label": "CMake: build",
       "command": "build",
       "targets": [
-        "all"
+        "dzrcobs_test"
       ],
       "preset": "${command:cmake.activeBuildPresetName}",
       "group": {
