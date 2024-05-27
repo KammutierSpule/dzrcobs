@@ -21,6 +21,89 @@
 // Implementation
 // /////////////////////////////////////////////////////////////////////////////
 
+eRCOBS_ret rcobs_encode_inc_begin( sRCOBS_ctx *aCtx, uint8_t *aDstBuf, size_t aDstBufSize )
+{
+	if( ( !aCtx ) || ( !aDstBuf ) || ( aDstBufSize < 2 ) )
+	{
+		return RCOBS_RET_ERR_BAD_ARG;
+	}
+	aCtx->pDst		= aDstBuf;
+	aCtx->pCurDst = aDstBuf;
+	aCtx->pDstEnd = aDstBuf + aDstBufSize;
+	aCtx->code		= 1;
+
+	return RCOBS_RET_SUCCESS;
+}
+
+eRCOBS_ret rcobs_encode_inc_end( sRCOBS_ctx *aCtx, size_t *aOutSizeEncoded )
+{
+	if( ( !aCtx ) || ( !aOutSizeEncoded ) )
+	{
+		return RCOBS_RET_ERR_BAD_ARG;
+	}
+
+	if( aCtx->code != 1 )
+	{
+		*aCtx->pCurDst++ = aCtx->code;
+	}
+
+	*aOutSizeEncoded = (size_t)( aCtx->pCurDst - aCtx->pDst );
+
+	return RCOBS_RET_SUCCESS;
+}
+
+eRCOBS_ret rcobs_encode_inc( sRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aSrcBufSize )
+{
+	if( ( !aCtx ) || ( !aSrcBuf ) )
+	{
+		return RCOBS_RET_ERR_BAD_ARG;
+	}
+
+	if( aSrcBufSize == 0 )
+	{
+		return RCOBS_RET_SUCCESS;
+	}
+
+	const size_t maxEncodedSize = RCOBS_MAX_ENCODED_SIZE( aSrcBufSize );
+
+	uint8_t *curDst = aCtx->pCurDst;
+
+	if( ( curDst + maxEncodedSize ) > aCtx->pDstEnd )
+	{
+		return RCOBS_RET_ERR_OVERFLOW;
+	}
+
+	uint8_t curCode = aCtx->code;
+
+	while( aSrcBufSize )
+	{
+		aSrcBufSize--;
+		const uint8_t byte = *aSrcBuf++;
+
+		if( byte == 0 )
+		{
+			*curDst++ = curCode;
+			curCode		= 1;
+		}
+		else
+		{
+			*curDst++ = byte;
+			curCode++;
+
+			if( curCode == 0xFF )
+			{
+				*curDst++ = curCode;
+				curCode		= 1;
+			}
+		}
+	}
+
+	aCtx->code		= curCode;
+	aCtx->pCurDst = curDst;
+
+	return RCOBS_RET_SUCCESS;
+}
+
 eRCOBS_ret rcobs_decode( const uint8_t *aSrcBufEncoded,
 												 size_t aSrcBufEncodedLen,
 												 uint8_t *aDstBufDecoded,

@@ -21,17 +21,21 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// clang-format off
 #ifdef __cplusplus
 extern "C" {
 #endif
+// clang-format on
 
 // Definitions
 // /////////////////////////////////////////////////////////////////////////////
 
 typedef struct s_RCOB_ctx
 {
-	void *pCurDst;	///< Current destiny pointer
-	void *pLastPos; ///< Last position pointer
+	uint8_t *pDst;		///< Initial destiny pointer
+	uint8_t *pCurDst; ///< Current destiny pointer
+	uint8_t *pDstEnd; ///< Last position pointer 1 position outside buffer range
+	uint8_t code;			///< Current code
 } sRCOBS_ctx;
 
 typedef enum eRCOBS_ret
@@ -41,6 +45,10 @@ typedef enum eRCOBS_ret
 	RCOBS_RET_ERR_OVERFLOW,
 	RCOBS_RET_ERR_BAD_ENCODED_PAYLOAD,
 } eRCOBS_ret;
+
+#define Z_RCOBS_DIV_ROUND_UP( n, d ) ( ( ( n ) + ( d ) - 1 ) / ( d ) )
+#define RCOBS_MAX_OVERHEAD( size ) Z_RCOBS_DIV_ROUND_UP( ( size ), 254 )
+#define RCOBS_MAX_ENCODED_SIZE( size ) ( ( size ) + RCOBS_MAX_OVERHEAD( ( size ) ) + ( size == 0 ) )
 
 // Declarations
 // /////////////////////////////////////////////////////////////////////////////
@@ -53,7 +61,7 @@ typedef enum eRCOBS_ret
  * @param aDstBufSize Max buffer size
  * @return eRCOBS_ret
  */
-eRCOBS_ret rcobs_encode_inc_begin( sRCOBS_ctx *aCtx, void *aDstBuf, size_t aDstBufSize );
+eRCOBS_ret rcobs_encode_inc_begin( sRCOBS_ctx *aCtx, uint8_t *aDstBuf, size_t aDstBufSize );
 
 /**
  * @brief Add the data to encoding
@@ -63,7 +71,7 @@ eRCOBS_ret rcobs_encode_inc_begin( sRCOBS_ctx *aCtx, void *aDstBuf, size_t aDstB
  * @param aSrcBufSize Size of source buffer
  * @return eRCOBS_ret
  */
-eRCOBS_ret rcobs_encode_inc( sRCOBS_ctx *aCtx, const void *aSrcBuf, size_t aSrcBufSize );
+eRCOBS_ret rcobs_encode_inc( sRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aSrcBufSize );
 
 /**
  * @brief Finalize the encoding. It adds a 0 in the end of buffer
