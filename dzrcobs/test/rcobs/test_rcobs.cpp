@@ -17,6 +17,8 @@
 // Includes
 // /////////////////////////////////////////////////////////////////////////////
 #include <CppUTest/TestHarness.h>
+#include <cstddef>
+#include <cstdint>
 #include <dzrcobs/rcobs.h>
 #include "CppUTest/UtestMacros.h"
 
@@ -86,7 +88,7 @@ TEST( RCOBS, MACRO_RCOBS_ENCODE_MAX )
 	CHECK_EQUAL( ( 254 * 2 + 1 ) + ( 1 * 2 ), RCOBS_MAX_ENCODED_SIZE( 254 * 2 ) + 1 );
 }
 
-TEST( RCOBS, manual_decode )
+TEST( RCOBS, DecodeManual )
 {
 	size_t idx									 = 0;
 	const uint8_t *pDatatest		 = s_rcobs_datatest;
@@ -130,7 +132,7 @@ TEST( RCOBS, manual_decode )
 	}
 }
 
-TEST( RCOBS, manual_encode )
+TEST( RCOBS, EncodeManual )
 {
 	size_t idx									 = 0;
 	const uint8_t *pDatatest		 = s_rcobs_datatest;
@@ -177,6 +179,73 @@ TEST( RCOBS, manual_encode )
 	}
 }
 
+TEST( RCOBS, DecodeInvalidArgs )
+{
+	eRCOBS_ret ret			= RCOBS_RET_SUCCESS;
+	size_t decodedLen		= 0;
+	uint8_t *decodedPos = nullptr;
+
+	ret = rcobs_decode( buffer, 0, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, &decodedPos );
+	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ARG, ret );
+
+	ret = rcobs_decode( buffer, 1, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, &decodedPos );
+	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ARG, ret );
+
+	ret = rcobs_decode( NULL, 2, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, &decodedPos );
+	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ARG, ret );
+
+	ret = rcobs_decode( buffer, 2, NULL, 1, &decodedLen, &decodedPos );
+	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ARG, ret );
+
+	ret = rcobs_decode( buffer, 2, buffer + UTEST_GUARD_SIZE, 1, NULL, &decodedPos );
+	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ARG, ret );
+
+	ret = rcobs_decode( buffer, 2, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, NULL );
+	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ARG, ret );
+}
+
+TEST( RCOBS, EncodeBeginInvalidArgs )
+{
+	eRCOBS_ret ret = RCOBS_RET_SUCCESS;
+	sRCOBS_ctx ctx;
+
+	ret = rcobs_encode_inc_begin( &ctx, buffer, 0 );
+	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "buffer length <2 must fail" );
+
+	ret = rcobs_encode_inc_begin( &ctx, buffer, 1 );
+	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "buffer length <2 must fail" );
+
+	ret = rcobs_encode_inc_begin( &ctx, NULL, 3 );
+	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
+
+	ret = rcobs_encode_inc_begin( NULL, buffer, 3 );
+	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
+}
+
+TEST( RCOBS, EncodeIncInvalidArgs )
+{
+	eRCOBS_ret ret = RCOBS_RET_SUCCESS;
+	sRCOBS_ctx ctx;
+
+	ret = rcobs_encode_inc( NULL, buffer, 1 );
+	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
+
+	ret = rcobs_encode_inc( &ctx, NULL, 1 );
+	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
+}
+
+TEST( RCOBS, EncodeEndInvalidArgs )
+{
+	eRCOBS_ret ret = RCOBS_RET_SUCCESS;
+	sRCOBS_ctx ctx;
+	size_t sizeEncoded = 0;
+
+	ret = rcobs_encode_inc_end( &ctx, NULL );
+	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
+
+	ret = rcobs_encode_inc_end( NULL, &sizeEncoded );
+	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
+}
+
 // EOF
 // /////////////////////////////////////////////////////////////////////////////
-  
