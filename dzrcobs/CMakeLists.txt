@@ -40,7 +40,6 @@ set(MODULE_TARGET_NAME "dzrcobs")
 asap_add_library(
   ${MODULE_TARGET_NAME}
   STATIC
-  SHARED
   WARNING
   SOURCES
   # Headers
