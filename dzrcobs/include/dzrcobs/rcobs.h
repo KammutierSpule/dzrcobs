@@ -36,6 +36,10 @@ typedef struct s_RCOB_ctx
 	uint8_t *pCurDst; ///< Current destiny pointer
 	uint8_t *pDstEnd; ///< Last position pointer 1 position outside buffer range
 	uint8_t code;			///< Current code
+
+#ifdef ASAP_IS_DEBUG_BUILD
+	size_t writeCounter; ///< Current destiny counter, for debug
+#endif
 } sRCOBS_ctx;
 
 typedef enum eRCOBS_ret
