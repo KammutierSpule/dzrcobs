@@ -7,10 +7,18 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Launch",
+      "name": "Launch dev-clang",
+      "program": "${workspaceFolder}/out/build/dev-clang/bin/dzrcobs_test",
+      "args": [],
+      "cwd": "${workspaceFolder}/out/build/dev-clang/bin/",
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Launch dev-linux",
       "program": "${workspaceFolder}/out/build/dev-linux/bin/dzrcobs_test",
       "args": [],
-      "cwd": "${workspaceFolder}"
+      "cwd": "${workspaceFolder}/out/build/dev-linux/bin/",
     },
   ]
 }
