@@ -42,6 +42,11 @@ eRCOBS_ret rcobs_encode_inc_end( sRCOBS_ctx *aCtx, size_t *aOutSizeEncoded )
 		return RCOBS_RET_ERR_BAD_ARG;
 	}
 
+	if( ( aCtx->pCurDst + 1 ) > aCtx->pDstEnd )
+	{
+		return RCOBS_RET_ERR_OVERFLOW;
+	}
+
 	if( aCtx->code != 1 )
 	{
 		*aCtx->pCurDst++ = aCtx->code;
