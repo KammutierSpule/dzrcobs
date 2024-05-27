@@ -297,4 +297,6 @@
   "cpputestTestAdapter.testExecutable": "${workspaceFolder}/out/build/dev-linux/bin/dzrcobs_test;${workspaceFolder}/out/build/dev-linux/bin/dzrcobs_test.exe",
   "cpputestTestAdapter.testExecutablePath": "${workspaceFolder}/out/build/dev-linux/bin/",
   "memory-view.showMemoryPanel": true,
+  "coverage-gutters.showGutterCoverage": false,
+  "coverage-gutters.showLineCoverage": true,
 }
