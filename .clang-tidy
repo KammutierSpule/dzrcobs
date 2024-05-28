@@ -24,4 +24,7 @@ Checks: >
     -hicpp-deprecated-headers,
     -cppcoreguidelines-avoid-do-while,
     -cppcoreguidelines-owning-memory,
+    -hicpp-avoid-c-arrays,
+    -hicpp-use-auto,
+
 HeaderFilterRegex: ".*/[common|logging]/.*"

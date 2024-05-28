@@ -1,5 +1,5 @@
 // /////////////////////////////////////////////////////////////////////////////
-///	@file test_rcobs.cpp
+///	@file test_dzrcobs.cpp
 ///	@brief Tests for reversed COBS
 ///
 ///	@par  Plataform Target:	Tests
@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <dzrcobs/dzrcobs.h>
 #include <dzrcobs/rcobs.h>
 #include "CppUTest/UtestMacros.h"
 
@@ -36,7 +37,7 @@
 
 // clang-format off
 // NOLINTBEGIN
-TEST_GROUP( RCOBS ){
+TEST_GROUP( DZRCOBS ){
 	void setup()
 	{
 		buffer = new uint8_t[UTEST_GUARD_SIZE + UTEST_ENCODED_DECODED_DATA_MAX_SIZE + UTEST_GUARD_SIZE];
@@ -58,7 +59,7 @@ TEST_GROUP( RCOBS ){
 
 // clang-format off
 // NOLINTBEGIN
-static uint8_t s_rcobs_datatest[] = {
+static uint8_t s_dzrcobs_datatest[] = {
 	// 1
 	1, 'A',				// decoded
 	2, 'A', 0x02,	// encoded
@@ -79,7 +80,7 @@ static uint8_t s_rcobs_datatest[] = {
 // /////////////////////////////////////////////////////////////////////////////
 
 // NOLINTBEGIN
-TEST( RCOBS, MACRO_RCOBS_ENCODE_MAX )
+TEST( DZRCOBS, MACRO_DZRCOBS_ENCODE_MAX )
 // NOLINTEND
 {
 	// COBS requires a minimum of 1 byte overhead,
@@ -94,12 +95,12 @@ TEST( RCOBS, MACRO_RCOBS_ENCODE_MAX )
 }
 
 // NOLINTBEGIN
-TEST( RCOBS, DecodeManual )
+TEST( DZRCOBS, DecodeManual )
 // NOLINTEND
 {
 	size_t idx									 = 0;
-	const uint8_t *pDatatest		 = s_rcobs_datatest;
-	const uint8_t *pDatatest_end = s_rcobs_datatest + sizeof( s_rcobs_datatest );
+	const uint8_t *pDatatest		 = s_dzrcobs_datatest;
+	const uint8_t *pDatatest_end = s_dzrcobs_datatest + sizeof( s_dzrcobs_datatest );
 
 	while( pDatatest < pDatatest_end )
 	{
@@ -111,7 +112,7 @@ TEST( RCOBS, DecodeManual )
 		const uint8_t *encodedData		= pDatatest;
 		pDatatest += encodedDataSize;
 
-		eRCOBS_ret ret			= RCOBS_RET_SUCCESS;
+		eDZRCOBS_ret ret		= DZRCOBS_RET_SUCCESS;
 		size_t decodedLen		= 0;
 		uint8_t *decodedPos = nullptr;
 
@@ -122,14 +123,14 @@ TEST( RCOBS, DecodeManual )
 
 		CHECK_EQUAL( encodedDataSize, RCOBS_MAX_ENCODED_SIZE( decodeDataSize ) );
 
-		ret = rcobs_decode( encodedData,
-												encodedDataSize,
-												buffer + UTEST_GUARD_SIZE,
-												decodeDataSize, // used to test limit of the buffer
-												&decodedLen,
-												&decodedPos );
+		ret = dzrcobs_decode( encodedData,
+													encodedDataSize,
+													buffer + UTEST_GUARD_SIZE,
+													decodeDataSize, // used to test limit of the buffer
+													&decodedLen,
+													&decodedPos );
 
-		CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
+		CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
 		CHECK_EQUAL( 0, memcmp( buffer, &guard, UTEST_GUARD_SIZE ) );
 		CHECK_EQUAL( 0,
 								 memcmp( buffer + UTEST_GUARD_SIZE + UTEST_ENCODED_DECODED_DATA_MAX_SIZE, &guard, UTEST_GUARD_SIZE ) );
@@ -140,12 +141,12 @@ TEST( RCOBS, DecodeManual )
 }
 
 // NOLINTBEGIN
-TEST( RCOBS, EncodeManual )
+TEST( DZRCOBS, EncodeManual )
 // NOLINTEND
 {
 	size_t idx									 = 0;
-	const uint8_t *pDatatest		 = s_rcobs_datatest;
-	const uint8_t *pDatatest_end = s_rcobs_datatest + sizeof( s_rcobs_datatest );
+	const uint8_t *pDatatest		 = s_dzrcobs_datatest;
+	const uint8_t *pDatatest_end = s_dzrcobs_datatest + sizeof( s_dzrcobs_datatest );
 
 	while( pDatatest < pDatatest_end )
 	{
@@ -164,21 +165,21 @@ TEST( RCOBS, EncodeManual )
 
 		CHECK_EQUAL( encodedDataSize, RCOBS_MAX_ENCODED_SIZE( decodeDataSize ) );
 
-		eRCOBS_ret ret		= RCOBS_RET_SUCCESS;
+		eDZRCOBS_ret ret	= DZRCOBS_RET_SUCCESS;
 		size_t encodedLen = 0;
-		sRCOBS_ctx ctx;
+		sDZRCOBS_ctx ctx;
 
-		ret = rcobs_encode_inc_begin( &ctx,
-																	buffer + UTEST_GUARD_SIZE,
-																	encodedDataSize // Used to test the limit
+		ret = dzrcobs_encode_inc_begin( &ctx,
+																		buffer + UTEST_GUARD_SIZE,
+																		encodedDataSize // Used to test the limit
 		);
-		CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
+		CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
 
-		ret = rcobs_encode_inc( &ctx, decodeData, decodeDataSize );
-		CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
+		ret = dzrcobs_encode_inc( &ctx, decodeData, decodeDataSize );
+		CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
 
-		ret = rcobs_encode_inc_end( &ctx, &encodedLen );
-		CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
+		ret = dzrcobs_encode_inc_end( &ctx, &encodedLen );
+		CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
 
 		CHECK_EQUAL( encodedDataSize, encodedLen );
 		CHECK_EQUAL( 0, memcmp( encodedData, buffer + UTEST_GUARD_SIZE, encodedDataSize ) );
@@ -189,158 +190,158 @@ TEST( RCOBS, EncodeManual )
 }
 
 // NOLINTBEGIN
-TEST( RCOBS, DecodeInvalidArgs )
+TEST( DZRCOBS, DecodeInvalidArgs )
 // NOLINTEND
 {
-	eRCOBS_ret ret			= RCOBS_RET_SUCCESS;
+	eDZRCOBS_ret ret		= DZRCOBS_RET_SUCCESS;
 	size_t decodedLen		= 0;
 	uint8_t *decodedPos = nullptr;
 
-	ret = rcobs_decode( buffer, 0, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, &decodedPos );
-	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ARG, ret );
+	ret = dzrcobs_decode( buffer, 0, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, &decodedPos );
+	CHECK_EQUAL( DZRCOBS_RET_ERR_BAD_ARG, ret );
 
-	ret = rcobs_decode( buffer, 1, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, &decodedPos );
-	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ARG, ret );
+	ret = dzrcobs_decode( buffer, 1, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, &decodedPos );
+	CHECK_EQUAL( DZRCOBS_RET_ERR_BAD_ARG, ret );
 
-	ret = rcobs_decode( nullptr, 2, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, &decodedPos );
-	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ARG, ret );
+	ret = dzrcobs_decode( nullptr, 2, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, &decodedPos );
+	CHECK_EQUAL( DZRCOBS_RET_ERR_BAD_ARG, ret );
 
-	ret = rcobs_decode( buffer, 2, nullptr, 1, &decodedLen, &decodedPos );
-	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ARG, ret );
+	ret = dzrcobs_decode( buffer, 2, nullptr, 1, &decodedLen, &decodedPos );
+	CHECK_EQUAL( DZRCOBS_RET_ERR_BAD_ARG, ret );
 
-	ret = rcobs_decode( buffer, 2, buffer + UTEST_GUARD_SIZE, 1, nullptr, &decodedPos );
-	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ARG, ret );
+	ret = dzrcobs_decode( buffer, 2, buffer + UTEST_GUARD_SIZE, 1, nullptr, &decodedPos );
+	CHECK_EQUAL( DZRCOBS_RET_ERR_BAD_ARG, ret );
 
-	ret = rcobs_decode( buffer, 2, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, nullptr );
-	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ARG, ret );
+	ret = dzrcobs_decode( buffer, 2, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, nullptr );
+	CHECK_EQUAL( DZRCOBS_RET_ERR_BAD_ARG, ret );
 }
 
 // NOLINTBEGIN
-TEST( RCOBS, DecodeInvalidPayload )
+TEST( DZRCOBS, DecodeInvalidPayload )
 // NOLINTEND
 {
-	eRCOBS_ret ret			= RCOBS_RET_SUCCESS;
+	eDZRCOBS_ret ret		= DZRCOBS_RET_SUCCESS;
 	size_t decodedLen		= 0;
 	uint8_t *decodedPos = nullptr;
 
 	buffer[UTEST_GUARD_SIZE + 0] = 0;
 	buffer[UTEST_GUARD_SIZE + 1] = 0;
-	ret = rcobs_decode( buffer + UTEST_GUARD_SIZE, 2, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, &decodedPos );
-	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ENCODED_PAYLOAD, ret );
+	ret = dzrcobs_decode( buffer + UTEST_GUARD_SIZE, 2, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, &decodedPos );
+	CHECK_EQUAL( DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD, ret );
 
 	buffer[UTEST_GUARD_SIZE + 0] = 0;
 	buffer[UTEST_GUARD_SIZE + 1] = 1;
-	ret = rcobs_decode( buffer + UTEST_GUARD_SIZE, 2, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, &decodedPos );
-	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ENCODED_PAYLOAD, ret );
+	ret = dzrcobs_decode( buffer + UTEST_GUARD_SIZE, 2, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, &decodedPos );
+	CHECK_EQUAL( DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD, ret );
 
 	buffer[UTEST_GUARD_SIZE + 0] = 0;
 	buffer[UTEST_GUARD_SIZE + 1] = 1;
 	buffer[UTEST_GUARD_SIZE + 2] = 3;
-	ret = rcobs_decode( buffer + UTEST_GUARD_SIZE, 3, buffer + UTEST_GUARD_SIZE, 2, &decodedLen, &decodedPos );
-	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ENCODED_PAYLOAD, ret );
+	ret = dzrcobs_decode( buffer + UTEST_GUARD_SIZE, 3, buffer + UTEST_GUARD_SIZE, 2, &decodedLen, &decodedPos );
+	CHECK_EQUAL( DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD, ret );
 
 	buffer[UTEST_GUARD_SIZE + 0] = 1;
 	buffer[UTEST_GUARD_SIZE + 1] = 1;
 	buffer[UTEST_GUARD_SIZE + 2] = 4;
-	ret = rcobs_decode( buffer + UTEST_GUARD_SIZE, 3, buffer + UTEST_GUARD_SIZE, 2, &decodedLen, &decodedPos );
-	CHECK_EQUAL( RCOBS_RET_ERR_OVERFLOW, ret );
+	ret = dzrcobs_decode( buffer + UTEST_GUARD_SIZE, 3, buffer + UTEST_GUARD_SIZE, 2, &decodedLen, &decodedPos );
+	CHECK_EQUAL( DZRCOBS_RET_ERR_OVERFLOW, ret );
 }
 
 // NOLINTBEGIN
-TEST( RCOBS, EncodeBeginInvalidArgs )
+TEST( DZRCOBS, EncodeBeginInvalidArgs )
 // NOLINTEND
 {
-	eRCOBS_ret ret = RCOBS_RET_SUCCESS;
-	sRCOBS_ctx ctx;
+	eDZRCOBS_ret ret = DZRCOBS_RET_SUCCESS;
+	sDZRCOBS_ctx ctx;
 
-	ret = rcobs_encode_inc_begin( &ctx, buffer, 0 );
-	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "buffer length <2 must fail" );
+	ret = dzrcobs_encode_inc_begin( &ctx, buffer, 0 );
+	CHECK_EQUAL_TEXT( DZRCOBS_RET_ERR_BAD_ARG, ret, "buffer length <2 must fail" );
 
-	ret = rcobs_encode_inc_begin( &ctx, buffer, 1 );
-	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "buffer length <2 must fail" );
+	ret = dzrcobs_encode_inc_begin( &ctx, buffer, 1 );
+	CHECK_EQUAL_TEXT( DZRCOBS_RET_ERR_BAD_ARG, ret, "buffer length <2 must fail" );
 
-	ret = rcobs_encode_inc_begin( &ctx, nullptr, 3 );
-	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
+	ret = dzrcobs_encode_inc_begin( &ctx, nullptr, 3 );
+	CHECK_EQUAL_TEXT( DZRCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
 
-	ret = rcobs_encode_inc_begin( nullptr, buffer, 3 );
-	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
+	ret = dzrcobs_encode_inc_begin( nullptr, buffer, 3 );
+	CHECK_EQUAL_TEXT( DZRCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
 }
 
 // NOLINTBEGIN
-TEST( RCOBS, EncodeIncInvalidArgs )
+TEST( DZRCOBS, EncodeIncInvalidArgs )
 // NOLINTEND
 {
-	eRCOBS_ret ret = RCOBS_RET_SUCCESS;
-	sRCOBS_ctx ctx;
+	eDZRCOBS_ret ret = DZRCOBS_RET_SUCCESS;
+	sDZRCOBS_ctx ctx;
 
-	ret = rcobs_encode_inc( nullptr, buffer, 1 );
-	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
+	ret = dzrcobs_encode_inc( nullptr, buffer, 1 );
+	CHECK_EQUAL_TEXT( DZRCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
 
-	ret = rcobs_encode_inc( &ctx, nullptr, 1 );
-	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
+	ret = dzrcobs_encode_inc( &ctx, nullptr, 1 );
+	CHECK_EQUAL_TEXT( DZRCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
 }
 
 // NOLINTBEGIN
-TEST( RCOBS, EncodeEndInvalidArgs )
+TEST( DZRCOBS, EncodeEndInvalidArgs )
 // NOLINTEND
 {
-	eRCOBS_ret ret = RCOBS_RET_SUCCESS;
-	sRCOBS_ctx ctx;
+	eDZRCOBS_ret ret = DZRCOBS_RET_SUCCESS;
+	sDZRCOBS_ctx ctx;
 	size_t sizeEncoded = 0;
 
-	ret = rcobs_encode_inc_end( &ctx, nullptr );
-	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
+	ret = dzrcobs_encode_inc_end( &ctx, nullptr );
+	CHECK_EQUAL_TEXT( DZRCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
 
-	ret = rcobs_encode_inc_end( nullptr, &sizeEncoded );
-	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
+	ret = dzrcobs_encode_inc_end( nullptr, &sizeEncoded );
+	CHECK_EQUAL_TEXT( DZRCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
 }
 
 // NOLINTBEGIN
-TEST( RCOBS, EncodeOverflow )
+TEST( DZRCOBS, EncodeOverflow )
 // NOLINTEND
 {
-	eRCOBS_ret ret = RCOBS_RET_SUCCESS;
-	sRCOBS_ctx ctx;
+	eDZRCOBS_ret ret = DZRCOBS_RET_SUCCESS;
+	sDZRCOBS_ctx ctx;
 	size_t sizeEncoded = 0;
 
-	ret = rcobs_encode_inc_begin( &ctx, buffer + UTEST_GUARD_SIZE, 2 );
-	CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
+	ret = dzrcobs_encode_inc_begin( &ctx, buffer + UTEST_GUARD_SIZE, 2 );
+	CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
 
 	uint8_t testBuffer[2] = { 0 };
 
-	ret = rcobs_encode_inc( &ctx, testBuffer, 2 );
-	CHECK_EQUAL( RCOBS_RET_ERR_OVERFLOW, ret );
+	ret = dzrcobs_encode_inc( &ctx, testBuffer, 2 );
+	CHECK_EQUAL( DZRCOBS_RET_ERR_OVERFLOW, ret );
 }
 
 // NOLINTBEGIN
-TEST( RCOBS, EncodeFirstOKThenOverflow )
+TEST( DZRCOBS, EncodeFirstOKThenOverflow )
 // NOLINTEND
 {
-	eRCOBS_ret ret = RCOBS_RET_SUCCESS;
-	sRCOBS_ctx ctx;
+	eDZRCOBS_ret ret = DZRCOBS_RET_SUCCESS;
+	sDZRCOBS_ctx ctx;
 	size_t sizeEncoded = 0;
 
-	ret = rcobs_encode_inc_begin( &ctx, buffer + UTEST_GUARD_SIZE, 2 );
-	CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
+	ret = dzrcobs_encode_inc_begin( &ctx, buffer + UTEST_GUARD_SIZE, 2 );
+	CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
 
 	uint8_t testBuffer[2] = { 0 };
 
-	ret = rcobs_encode_inc( &ctx, testBuffer, 0 );
-	CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
+	ret = dzrcobs_encode_inc( &ctx, testBuffer, 0 );
+	CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
 
-	ret = rcobs_encode_inc( &ctx, testBuffer, 1 );
-	CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
+	ret = dzrcobs_encode_inc( &ctx, testBuffer, 1 );
+	CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
 
-	ret = rcobs_encode_inc( &ctx, testBuffer, 1 );
-	CHECK_EQUAL( RCOBS_RET_ERR_OVERFLOW, ret );
+	ret = dzrcobs_encode_inc( &ctx, testBuffer, 1 );
+	CHECK_EQUAL( DZRCOBS_RET_ERR_OVERFLOW, ret );
 }
 
 // NOLINTBEGIN
-TEST( RCOBS, EncodeLongBuffer )
+TEST( DZRCOBS, EncodeLongBuffer )
 // NOLINTEND
 {
-	eRCOBS_ret ret = RCOBS_RET_SUCCESS;
-	sRCOBS_ctx ctx;
+	eDZRCOBS_ret ret = DZRCOBS_RET_SUCCESS;
+	sDZRCOBS_ctx ctx;
 	size_t sizeEncoded = 0;
 
 	static const uint32_t guard = ( UTEST_GUARD_BYTE << 24 ) | ( UTEST_GUARD_BYTE << 16 ) | ( UTEST_GUARD_BYTE << 8 ) |
@@ -348,8 +349,8 @@ TEST( RCOBS, EncodeLongBuffer )
 
 	memset( buffer, UTEST_GUARD_BYTE, UTEST_ENCODED_DECODED_DATA_MAX_SIZE + UTEST_GUARD_SIZE * 2 );
 
-	ret = rcobs_encode_inc_begin( &ctx, buffer + UTEST_GUARD_SIZE, UTEST_ENCODED_DECODED_DATA_MAX_SIZE );
-	CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
+	ret = dzrcobs_encode_inc_begin( &ctx, buffer + UTEST_GUARD_SIZE, UTEST_ENCODED_DECODED_DATA_MAX_SIZE );
+	CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
 
 	const size_t sizeToEncode = 512;
 
@@ -360,25 +361,29 @@ TEST( RCOBS, EncodeLongBuffer )
 		decodedData[i] = rand();
 	}
 
-	ret = rcobs_encode_inc( &ctx, decodedData + ( sizeToEncode / 2 ) * 0, sizeToEncode / 2 );
-	CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
+	ret = dzrcobs_encode_inc( &ctx, decodedData + ( sizeToEncode / 2 ) * 0, sizeToEncode / 2 );
+	CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
 
-	ret = rcobs_encode_inc( &ctx, decodedData + ( sizeToEncode / 2 ) * 1, sizeToEncode / 2 );
-	CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
+	ret = dzrcobs_encode_inc( &ctx, decodedData + ( sizeToEncode / 2 ) * 1, sizeToEncode / 2 );
+	CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
 
-	ret = rcobs_encode_inc_end( &ctx, &sizeEncoded );
-	CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
+	ret = dzrcobs_encode_inc_end( &ctx, &sizeEncoded );
+	CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
 
 	CHECK_EQUAL( 0, memcmp( buffer, &guard, UTEST_GUARD_SIZE ) );
 	CHECK_EQUAL( 0, memcmp( buffer + UTEST_GUARD_SIZE + UTEST_ENCODED_DECODED_DATA_MAX_SIZE, &guard, UTEST_GUARD_SIZE ) );
 
-	uint8_t *decodedBuffer = new uint8_t[UTEST_GUARD_SIZE + ( sizeToEncode + 1 ) + UTEST_GUARD_SIZE];
+	uint8_t *decodedBuffer		= new uint8_t[UTEST_GUARD_SIZE + ( sizeToEncode + 1 ) + UTEST_GUARD_SIZE];
 	uint8_t *decodedBufferPos = nullptr;
 
 	size_t sizeDecoded = 0;
-	ret =
-	 rcobs_decode( buffer + UTEST_GUARD_SIZE, sizeEncoded, decodedBuffer, sizeToEncode, &sizeDecoded, &decodedBufferPos );
-	CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
+	ret								 = dzrcobs_decode( buffer + UTEST_GUARD_SIZE,
+												 sizeEncoded,
+												 decodedBuffer,
+												 sizeToEncode,
+												 &sizeDecoded,
+												 &decodedBufferPos );
+	CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
 
 	CHECK_EQUAL( sizeToEncode, sizeDecoded );
 	CHECK_EQUAL( decodedBuffer, decodedBufferPos );

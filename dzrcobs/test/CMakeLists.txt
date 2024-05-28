@@ -18,6 +18,7 @@ asap_add_test(
   SRCS
   "main.cpp"
   "rcobs/test_rcobs.cpp"
+  "dzrcobs/test_dzrcobs.cpp"
   LINK
   CppUTest::CppUTest
   CppUTest::CppUTestExt

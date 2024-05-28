@@ -44,8 +44,10 @@ asap_add_library(
   SOURCES
   # Headers
   "include/dzrcobs/rcobs.h"
+  "include/dzrcobs/dzrcobs.h"
   # Sources
-  "src/rcobs.c")
+  "src/rcobs.c"
+  "src/dzrcobs.c")
 
 # target_link_libraries(${MODULE_TARGET_NAME} PRIVATE )
 

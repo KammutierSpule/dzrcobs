@@ -1,5 +1,5 @@
 // /////////////////////////////////////////////////////////////////////////////
-///	@file rcobs.hpp
+///	@file dzrcobs.h
 ///	@brief
 ///
 ///	@par  Plataform Target:	Any
@@ -13,8 +13,8 @@
 /// SPDX-License-Identifier: BSD-3-Clause
 ///
 // /////////////////////////////////////////////////////////////////////////////
-#ifndef _RCOBS_H_
-#define _RCOBS_H_
+#ifndef _DZRCOBS_H_
+#define _DZRCOBS_H_
 
 // Includes
 // /////////////////////////////////////////////////////////////////////////////
@@ -30,7 +30,7 @@ extern "C" {
 // Definitions
 // /////////////////////////////////////////////////////////////////////////////
 
-typedef struct s_RCOB_ctx
+typedef struct s_DZRCOB_ctx
 {
 	uint8_t *pDst;		///< Initial destiny pointer
 	uint8_t *pCurDst; ///< Current destiny pointer
@@ -40,19 +40,15 @@ typedef struct s_RCOB_ctx
 #ifdef ASAP_IS_DEBUG_BUILD
 	size_t writeCounter; ///< Current destiny counter, for debug
 #endif
-} sRCOBS_ctx;
+} sDZRCOBS_ctx;
 
-typedef enum eRCOBS_ret
+typedef enum eDZRCOBS_ret
 {
-	RCOBS_RET_SUCCESS = 0,
-	RCOBS_RET_ERR_BAD_ARG,
-	RCOBS_RET_ERR_OVERFLOW,
-	RCOBS_RET_ERR_BAD_ENCODED_PAYLOAD,
-} eRCOBS_ret;
-
-#define Z_RCOBS_DIV_ROUND_UP( n, d ) ( ( ( n ) + ( d ) - 1 ) / ( d ) )
-#define RCOBS_MAX_OVERHEAD( size ) Z_RCOBS_DIV_ROUND_UP( ( size ), 254 )
-#define RCOBS_MAX_ENCODED_SIZE( size ) ( ( size ) + RCOBS_MAX_OVERHEAD( ( size ) ) + ( (size) == 0 ) )
+	DZRCOBS_RET_SUCCESS = 0,
+	DZRCOBS_RET_ERR_BAD_ARG,
+	DZRCOBS_RET_ERR_OVERFLOW,
+	DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD,
+} eDZRCOBS_ret;
 
 // Declarations
 // /////////////////////////////////////////////////////////////////////////////
@@ -65,7 +61,7 @@ typedef enum eRCOBS_ret
  * @param aDstBufSize Max buffer size
  * @return eRCOBS_ret
  */
-eRCOBS_ret rcobs_encode_inc_begin( sRCOBS_ctx *aCtx, uint8_t *aDstBuf, size_t aDstBufSize );
+eDZRCOBS_ret dzrcobs_encode_inc_begin( sDZRCOBS_ctx *aCtx, uint8_t *aDstBuf, size_t aDstBufSize );
 
 /**
  * @brief Add the data to encoding
@@ -75,7 +71,7 @@ eRCOBS_ret rcobs_encode_inc_begin( sRCOBS_ctx *aCtx, uint8_t *aDstBuf, size_t aD
  * @param aSrcBufSize Size of source buffer
  * @return eRCOBS_ret
  */
-eRCOBS_ret rcobs_encode_inc( sRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aSrcBufSize );
+eDZRCOBS_ret dzrcobs_encode_inc( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aSrcBufSize );
 
 /**
  * @brief Finalize the encoding. It adds a 0 in the end of buffer
@@ -84,7 +80,7 @@ eRCOBS_ret rcobs_encode_inc( sRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aS
  * @param aOutSizeEncoded Size of encoded data (last 0 included)
  * @return eRCOBS_ret
  */
-eRCOBS_ret rcobs_encode_inc_end( sRCOBS_ctx *aCtx, size_t *aOutSizeEncoded );
+eDZRCOBS_ret dzrcobs_encode_inc_end( sDZRCOBS_ctx *aCtx, size_t *aOutSizeEncoded );
 
 /**
  * @brief Decodes a source encoded buffer. It will place the decoded data
@@ -106,12 +102,12 @@ eRCOBS_ret rcobs_encode_inc_end( sRCOBS_ctx *aCtx, size_t *aOutSizeEncoded );
  * @retval RCOBS_RET_ERR_OVERFLOW if it overflows the destiny buffer
  * @retval RCOBS_RET_ERR_BAD_ENCODED_PAYLOAD if some invalid value (eg: 0x00)
  */
-eRCOBS_ret rcobs_decode( const uint8_t *aSrcBufEncoded,
-												 size_t aSrcBufEncodedLen,
-												 uint8_t *aDstBufDecoded,
-												 size_t aDstBufDecodedSize,
-												 size_t *aOutDecodedLen,
-												 uint8_t **aOutDecodedStartPos );
+eDZRCOBS_ret dzrcobs_decode( const uint8_t *aSrcBufEncoded,
+														 size_t aSrcBufEncodedLen,
+														 uint8_t *aDstBufDecoded,
+														 size_t aDstBufDecodedSize,
+														 size_t *aOutDecodedLen,
+														 uint8_t **aOutDecodedStartPos );
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 // /////////////////////////////////////////////////////////////////////////////
-///	@file rcobs.cpp
+///	@file dzrcobs.cpp
 ///	@brief
 ///
 ///	@par  Plataform Target:	Any
@@ -16,21 +16,22 @@
 
 // Includes
 // /////////////////////////////////////////////////////////////////////////////
+#include <dzrcobs/dzrcobs.h>
 #include <dzrcobs/rcobs.h>
 #include <stdbool.h>
 
 // Definitions
 // /////////////////////////////////////////////////////////////////////////////
-#define RCOBS_CODE_JUMP ( 0xFF )
+#define DZRCOBS_CODE_JUMP ( 0xFF )
 
 // Implementation
 // /////////////////////////////////////////////////////////////////////////////
 
-eRCOBS_ret rcobs_encode_inc_begin( sRCOBS_ctx *aCtx, uint8_t *aDstBuf, size_t aDstBufSize )
+eDZRCOBS_ret dzrcobs_encode_inc_begin( sDZRCOBS_ctx *aCtx, uint8_t *aDstBuf, size_t aDstBufSize )
 {
 	if( ( !aCtx ) || ( !aDstBuf ) || ( aDstBufSize < 2 ) )
 	{
-		return RCOBS_RET_ERR_BAD_ARG;
+		return DZRCOBS_RET_ERR_BAD_ARG;
 	}
 
 	aCtx->pDst		= aDstBuf;
@@ -42,19 +43,19 @@ eRCOBS_ret rcobs_encode_inc_begin( sRCOBS_ctx *aCtx, uint8_t *aDstBuf, size_t aD
 	aCtx->writeCounter = 0;
 #endif
 
-	return RCOBS_RET_SUCCESS;
+	return DZRCOBS_RET_SUCCESS;
 }
 
-eRCOBS_ret rcobs_encode_inc_end( sRCOBS_ctx *aCtx, size_t *aOutSizeEncoded )
+eDZRCOBS_ret dzrcobs_encode_inc_end( sDZRCOBS_ctx *aCtx, size_t *aOutSizeEncoded )
 {
 	if( ( !aCtx ) || ( !aOutSizeEncoded ) )
 	{
-		return RCOBS_RET_ERR_BAD_ARG;
+		return DZRCOBS_RET_ERR_BAD_ARG;
 	}
 
 	if( ( aCtx->pCurDst + 1 ) > aCtx->pDstEnd )
 	{
-		return RCOBS_RET_ERR_OVERFLOW;
+		return DZRCOBS_RET_ERR_OVERFLOW;
 	}
 
 #ifdef ASAP_IS_DEBUG_BUILD
@@ -65,19 +66,19 @@ eRCOBS_ret rcobs_encode_inc_end( sRCOBS_ctx *aCtx, size_t *aOutSizeEncoded )
 
 	*aOutSizeEncoded = (size_t)( aCtx->pCurDst - aCtx->pDst );
 
-	return RCOBS_RET_SUCCESS;
+	return DZRCOBS_RET_SUCCESS;
 }
 
-eRCOBS_ret rcobs_encode_inc( sRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aSrcBufSize )
+eDZRCOBS_ret dzrcobs_encode_inc( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aSrcBufSize )
 {
 	if( ( !aCtx ) || ( !aSrcBuf ) )
 	{
-		return RCOBS_RET_ERR_BAD_ARG;
+		return DZRCOBS_RET_ERR_BAD_ARG;
 	}
 
 	if( aSrcBufSize == 0 )
 	{
-		return RCOBS_RET_SUCCESS;
+		return DZRCOBS_RET_SUCCESS;
 	}
 
 	const size_t maxEncodedSize = RCOBS_MAX_ENCODED_SIZE( aSrcBufSize );
@@ -86,7 +87,7 @@ eRCOBS_ret rcobs_encode_inc( sRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aS
 
 	if( ( curDst + maxEncodedSize ) > aCtx->pDstEnd )
 	{
-		return RCOBS_RET_ERR_OVERFLOW;
+		return DZRCOBS_RET_ERR_OVERFLOW;
 	}
 
 #ifdef ASAP_IS_DEBUG_BUILD
@@ -123,7 +124,7 @@ eRCOBS_ret rcobs_encode_inc( sRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aS
 			*curDst++ = byte;
 			curCode++;
 
-			if( curCode == RCOBS_CODE_JUMP )
+			if( curCode == DZRCOBS_CODE_JUMP )
 			{
 #ifdef ASAP_IS_DEBUG_BUILD
 				aCtx->writeCounter++;
@@ -138,20 +139,20 @@ eRCOBS_ret rcobs_encode_inc( sRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aS
 	aCtx->code		= curCode;
 	aCtx->pCurDst = curDst;
 
-	return RCOBS_RET_SUCCESS;
+	return DZRCOBS_RET_SUCCESS;
 }
 
-eRCOBS_ret rcobs_decode( const uint8_t *aSrcBufEncoded,
-												 size_t aSrcBufEncodedLen,
-												 uint8_t *aDstBufDecoded,
-												 size_t aDstBufDecodedSize,
-												 size_t *aOutDecodedLen,
-												 uint8_t **aOutDecodedStartPos )
+eDZRCOBS_ret dzrcobs_decode( const uint8_t *aSrcBufEncoded,
+														 size_t aSrcBufEncodedLen,
+														 uint8_t *aDstBufDecoded,
+														 size_t aDstBufDecodedSize,
+														 size_t *aOutDecodedLen,
+														 uint8_t **aOutDecodedStartPos )
 {
 	if( ( !aSrcBufEncoded ) || ( !aDstBufDecoded ) || ( !aOutDecodedLen ) || ( !aOutDecodedStartPos ) ||
 			( aDstBufDecodedSize == 0 ) || ( aSrcBufEncodedLen < 2 ) )
 	{
-		return RCOBS_RET_ERR_BAD_ARG;
+		return DZRCOBS_RET_ERR_BAD_ARG;
 	}
 
 	const uint8_t *pBeginEncoded = aSrcBufEncoded;
@@ -172,10 +173,10 @@ eRCOBS_ret rcobs_decode( const uint8_t *aSrcBufEncoded,
 
 		if( code == 0 )
 		{
-			return RCOBS_RET_ERR_BAD_ENCODED_PAYLOAD;
+			return DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD;
 		}
 
-		if( ( code != RCOBS_CODE_JUMP ) &&						// Only adds if the new code is not skipping
+		if( ( code != DZRCOBS_CODE_JUMP ) &&					// Only adds if the new code is not skipping
 				( pWriteDecoded != pWriteDecodedInitial ) // Only adds if this is not the first run
 		)
 		{
@@ -190,7 +191,7 @@ eRCOBS_ret rcobs_decode( const uint8_t *aSrcBufEncoded,
 		code--;
 		if( ( pWriteDecoded - code ) < pBeginDecoded )
 		{
-			return RCOBS_RET_ERR_OVERFLOW;
+			return DZRCOBS_RET_ERR_OVERFLOW;
 		}
 
 		pReadEncoded--;
@@ -211,7 +212,7 @@ eRCOBS_ret rcobs_decode( const uint8_t *aSrcBufEncoded,
 
 			if( byte == 0 )
 			{
-				return RCOBS_RET_ERR_BAD_ENCODED_PAYLOAD;
+				return DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD;
 			}
 
 			pWriteDecoded--;
@@ -227,7 +228,7 @@ eRCOBS_ret rcobs_decode( const uint8_t *aSrcBufEncoded,
 
 	*aOutDecodedLen = aDstBufDecodedSize - (size_t)( pWriteDecoded - aDstBufDecoded );
 
-	return RCOBS_RET_SUCCESS;
+	return DZRCOBS_RET_SUCCESS;
 }
 
 // EOF
