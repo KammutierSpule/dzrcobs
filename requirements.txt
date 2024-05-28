@@ -3,12 +3,6 @@ bandit
 breathe
 cmakelang
 docutils
-esbonio
 myst-parser
 pygments
 rstcheck
-sphinx
-sphinx-autobuild
-sphinx-book-theme
-sphinx-copybutton
-sphinx-prompt

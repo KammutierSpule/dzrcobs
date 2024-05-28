@@ -88,21 +88,4 @@ if(${META_PROJECT_ID}_INSTALL)
     DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/${META_PROJECT_ID_LOWER}
     DESTINATION ${ASAP_INSTALL_INCLUDE}
     COMPONENT ${dev})
-
-  # Install master docs
-  string(MAKE_C_IDENTIFIER ${META_PROJECT_NAME} project_id)
-  string(TOLOWER ${project_id} project_id)
-  set(master_sphinx_target ${project_id}_master)
-  install(
-    DIRECTORY ${SPHINX_BUILD_DIR}/${master_sphinx_target}
-    DESTINATION ${ASAP_INSTALL_DOC}
-    COMPONENT ${docs}
-    OPTIONAL)
-
-  # Install data
-  install(
-    DIRECTORY ${PROJECT_SOURCE_DIR}/data
-    DESTINATION ${ASAP_INSTALL_DATA}
-    COMPONENT ${data}
-    OPTIONAL)
 endif()

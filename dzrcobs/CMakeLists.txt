@@ -1,10 +1,10 @@
-# ===------------------------------------------------------------------------===#
+# ===-----------------------------------------------------------------------===#
 # Distributed under the 3-Clause BSD License. See accompanying file LICENSE or
 # copy at https://opensource.org/licenses/BSD-3-Clause).
 # SPDX-License-Identifier: BSD-3-Clause
-# ===------------------------------------------------------------------------===#
+# ===-----------------------------------------------------------------------===#
 
-set(my_name "version-info")
+set(my_name "dzrcobs")
 asap_push_module("${my_name}")
 
 # ------------------------------------------------------------------------------
@@ -15,13 +15,13 @@ asap_declare_module(
   MODULE_NAME
   "${my_name}"
   DESCRIPTION
-  "Print the project's version information."
+  "Dictionary compression with Reverse-COBS encoding"
   GITHUB_REPO
-  "${META_GITHUB_REPO}"
+  "https://github.com/KammutierSpule/dzrcobs"
   AUTHOR_MAINTAINER
-  "${META_AUTHOR_MAINTAINER}"
+  "Mario Luzeiro"
   VERSION_MAJOR
-  "1"
+  "0"
   VERSION_MINOR
   "0"
   VERSION_PATCH
@@ -32,38 +32,42 @@ asap_declare_module(
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# Code generation
-# ------------------------------------------------------------------------------
-
-# Generate version-header
-configure_file(src/main.cpp.in ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
-
-# ------------------------------------------------------------------------------
 # Main module target
 # ------------------------------------------------------------------------------
 
-set(MODULE_TARGET_NAME "${META_PROJECT_NAME}-${META_MODULE_NAME}")
+set(MODULE_TARGET_NAME "dzrcobs")
 
-asap_add_executable(${MODULE_TARGET_NAME} WARNING SOURCES "src/main.cpp")
+asap_add_library(
+  ${MODULE_TARGET_NAME}
+  STATIC
+  WARNING
+  SOURCES
+  # Headers
+  "include/dzrcobs/rcobs.h"
+  # Sources
+  "src/rcobs.c")
 
-target_compile_features(${MODULE_TARGET_NAME} PUBLIC cxx_constexpr)
+# target_link_libraries(${MODULE_TARGET_NAME} PRIVATE )
 
-cmake_path(SET version_include_dir ${CMAKE_CURRENT_BINARY_DIR}/../../include
-           NORMALIZE)
 target_include_directories(
   ${MODULE_TARGET_NAME}
-  PUBLIC $<INSTALL_INTERFACE:include> $<BUILD_INTERFACE:${version_include_dir}>
+  PUBLIC $<INSTALL_INTERFACE:include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
+add_library(dzrcobs::${META_MODULE_NAME} ALIAS ${MODULE_TARGET_NAME})
+
+# Generate module config files for cmake and pkgconfig
+asap_create_module_config_files()
+
 # ------------------------------------------------------------------------------
-# Run executable test
+# Tests
 # ------------------------------------------------------------------------------
 
-# Always run the version-info as part of ctest suite
-add_test(
-  NAME "Misc:version-info"
-  COMMAND ${MODULE_TARGET_NAME}
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+if(ASAP_BUILD_TESTS)
+  add_subdirectory(test)
+endif()
 
 # ==============================================================================
 # Deployment instructions
@@ -74,14 +78,41 @@ if(${META_PROJECT_ID}_INSTALL)
   set(runtime "${MODULE_TARGET_NAME}_runtime")
   set(dev "${MODULE_TARGET_NAME}_dev")
 
-  # Binaries
+  # Library
   install(
     TARGETS ${MODULE_TARGET_NAME}
     EXPORT "${TARGETS_EXPORT_NAME}"
-    COMPONENT runtime
+    COMPONENT dev
     RUNTIME DESTINATION ${ASAP_INSTALL_BIN} COMPONENT ${runtime}
     LIBRARY DESTINATION ${ASAP_INSTALL_SHARED} COMPONENT ${runtime}
     ARCHIVE DESTINATION ${ASAP_INSTALL_LIB} COMPONENT ${dev})
+
+  # Header files
+  install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/${META_MODULE_NAME}
+    DESTINATION ${ASAP_INSTALL_INCLUDE}
+    COMPONENT ${dev}
+    FILES_MATCHING
+    PATTERN "*.h")
+
+  # Generated header files
+  install(
+    DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/${META_MODULE_NAME}
+    DESTINATION ${ASAP_INSTALL_INCLUDE}
+    COMPONENT ${dev})
+
+  # Target config
+  install(
+    EXPORT ${TARGETS_EXPORT_NAME}
+    NAMESPACE ${META_PROJECT_NAME}::
+    DESTINATION ${ASAP_INSTALL_CMAKE}/${META_MODULE_NAME}
+    COMPONENT ${dev})
+
+  # Package configuration files
+  install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/${MODULE_TARGET_NAME}Config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/${MODULE_TARGET_NAME}ConfigVersion.cmake
+    DESTINATION ${ASAP_INSTALL_CMAKE}/${META_MODULE_NAME})
 
   # Docs
   if(EXISTS ${SPHINX_BUILD_DIR}/${MODULE_TARGET_NAME})

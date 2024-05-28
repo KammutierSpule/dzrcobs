@@ -16,4 +16,12 @@ Checks: >
     -hicpp-signed-bitwise,
     -readability-function-cognitive-complexity,
     -used-but-marked-unused,
+    -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+    -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+    -hicpp-no-array-decay,
+    -modernize-use-trailing-return-type,
+    -modernize-use-using,
+    -hicpp-deprecated-headers,
+    -cppcoreguidelines-avoid-do-while,
+    -cppcoreguidelines-owning-memory,
 HeaderFilterRegex: ".*/[common|logging]/.*"
