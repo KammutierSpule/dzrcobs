@@ -34,7 +34,7 @@ typedef struct s_DZRCOB_ctx
 {
 	uint8_t *pDst;		///< Initial destiny pointer
 	uint8_t *pCurDst; ///< Current destiny pointer
-	uint8_t *pDstEnd; ///< Last position pointer 1 position outside buffer range
+	uint8_t *pDstEnd; ///< Last position pointer, 1 position outside buffer range
 	uint8_t code;			///< Current code
 
 #ifdef ASAP_IS_DEBUG_BUILD
@@ -42,13 +42,18 @@ typedef struct s_DZRCOB_ctx
 #endif
 } sDZRCOBS_ctx;
 
-typedef enum eDZRCOBS_ret
+typedef enum e_DZRCOBS_ret
 {
 	DZRCOBS_RET_SUCCESS = 0,
 	DZRCOBS_RET_ERR_BAD_ARG,
 	DZRCOBS_RET_ERR_OVERFLOW,
 	DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD,
 } eDZRCOBS_ret;
+
+#define DZRCOBS_ONE_BYTE_OVERHEAD_EVERY (126)
+#define Z_DZRCOBS_DIV_ROUND_UP( n, d ) ( ( ( n ) + ( d ) - 1 ) / ( d ) )
+#define DZRCOBS_MAX_OVERHEAD( size ) Z_DZRCOBS_DIV_ROUND_UP( ( size ), DZRCOBS_ONE_BYTE_OVERHEAD_EVERY )
+#define DZRCOBS_MAX_ENCODED_SIZE( size ) ( ( size ) + DZRCOBS_MAX_OVERHEAD( ( size ) ) + ( (size) == 0 ) )
 
 // Declarations
 // /////////////////////////////////////////////////////////////////////////////

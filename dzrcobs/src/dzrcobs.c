@@ -17,12 +17,11 @@
 // Includes
 // /////////////////////////////////////////////////////////////////////////////
 #include <dzrcobs/dzrcobs.h>
-#include <dzrcobs/rcobs.h>
 #include <stdbool.h>
 
 // Definitions
 // /////////////////////////////////////////////////////////////////////////////
-#define DZRCOBS_CODE_JUMP ( 0xFF )
+#define DZRCOBS_CODE_JUMP ( 0x7F )
 
 // Implementation
 // /////////////////////////////////////////////////////////////////////////////
@@ -81,7 +80,7 @@ eDZRCOBS_ret dzrcobs_encode_inc( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, siz
 		return DZRCOBS_RET_SUCCESS;
 	}
 
-	const size_t maxEncodedSize = RCOBS_MAX_ENCODED_SIZE( aSrcBufSize );
+	const size_t maxEncodedSize = DZRCOBS_MAX_ENCODED_SIZE( aSrcBufSize );
 
 	uint8_t *curDst = aCtx->pCurDst;
 

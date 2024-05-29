@@ -26,5 +26,6 @@ Checks: >
     -cppcoreguidelines-owning-memory,
     -hicpp-avoid-c-arrays,
     -hicpp-use-auto,
+    -cppcoreguidelines-avoid-c-arrays,
 
 HeaderFilterRegex: ".*/[common|logging]/.*"

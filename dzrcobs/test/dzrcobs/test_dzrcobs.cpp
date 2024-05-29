@@ -17,13 +17,12 @@
 // Includes
 // /////////////////////////////////////////////////////////////////////////////
 #include <CppUTest/TestHarness.h>
+#include <CppUTest/UtestMacros.h>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <dzrcobs/dzrcobs.h>
-#include <dzrcobs/rcobs.h>
-#include "CppUTest/UtestMacros.h"
 
 // Definitions
 // /////////////////////////////////////////////////////////////////////////////
@@ -80,18 +79,18 @@ static uint8_t s_dzrcobs_datatest[] = {
 // /////////////////////////////////////////////////////////////////////////////
 
 // NOLINTBEGIN
-TEST( DZRCOBS, MACRO_DZRCOBS_ENCODE_MAX )
+TEST( DZRCOBS, MacroEncodeMax )
 // NOLINTEND
 {
-	// COBS requires a minimum of 1 byte overhead,
-	// and a maximum of ⌈n/254⌉ bytes for n data bytes (one byte in 254, rounded
+	// DZCOBS requires a minimum of 1 byte overhead,
+	// and a maximum of ⌈n/126⌉ bytes for n data bytes (one byte in 126, rounded
 	// up)
-	CHECK_EQUAL( 1, RCOBS_MAX_ENCODED_SIZE( 0 ) );
-	CHECK_EQUAL( 1 + 1, RCOBS_MAX_ENCODED_SIZE( 1 ) );
-	CHECK_EQUAL( 254 + 1, RCOBS_MAX_ENCODED_SIZE( 254 ) );
-	CHECK_EQUAL( 255 + 2, RCOBS_MAX_ENCODED_SIZE( 255 ) );
-	CHECK_EQUAL( ( 254 * 2 ) + ( 1 * 2 ), RCOBS_MAX_ENCODED_SIZE( 254 * 2 ) );
-	CHECK_EQUAL( ( 254 * 2 + 1 ) + ( 1 * 2 ), RCOBS_MAX_ENCODED_SIZE( 254 * 2 ) + 1 );
+	CHECK_EQUAL( 1, DZRCOBS_MAX_ENCODED_SIZE( 0 ) );
+	CHECK_EQUAL( 1 + 1, DZRCOBS_MAX_ENCODED_SIZE( 1 ) );
+	CHECK_EQUAL( 126 + 1, DZRCOBS_MAX_ENCODED_SIZE( 126 ) );
+	CHECK_EQUAL( 127 + 2, DZRCOBS_MAX_ENCODED_SIZE( 127 ) );
+	CHECK_EQUAL( ( 126 * 2 ) + ( 1 * 2 ), DZRCOBS_MAX_ENCODED_SIZE( 126 * 2 ) );
+	CHECK_EQUAL( ( 126 * 2 + 1 ) + ( 1 * 2 ), DZRCOBS_MAX_ENCODED_SIZE( 126 * 2 ) + 1 );
 }
 
 // NOLINTBEGIN
@@ -121,7 +120,7 @@ TEST( DZRCOBS, DecodeManual )
 
 		memset( buffer, UTEST_GUARD_BYTE, UTEST_ENCODED_DECODED_DATA_MAX_SIZE + UTEST_GUARD_SIZE * 2 );
 
-		CHECK_EQUAL( encodedDataSize, RCOBS_MAX_ENCODED_SIZE( decodeDataSize ) );
+		CHECK_EQUAL( encodedDataSize, DZRCOBS_MAX_ENCODED_SIZE( decodeDataSize ) );
 
 		ret = dzrcobs_decode( encodedData,
 													encodedDataSize,
@@ -163,7 +162,7 @@ TEST( DZRCOBS, EncodeManual )
 
 		memset( buffer, UTEST_GUARD_BYTE, UTEST_ENCODED_DECODED_DATA_MAX_SIZE + UTEST_GUARD_SIZE * 2 );
 
-		CHECK_EQUAL( encodedDataSize, RCOBS_MAX_ENCODED_SIZE( decodeDataSize ) );
+		CHECK_EQUAL( encodedDataSize, DZRCOBS_MAX_ENCODED_SIZE( decodeDataSize ) );
 
 		eDZRCOBS_ret ret	= DZRCOBS_RET_SUCCESS;
 		size_t encodedLen = 0;

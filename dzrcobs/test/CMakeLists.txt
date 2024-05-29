@@ -19,6 +19,7 @@ asap_add_test(
   "main.cpp"
   "rcobs/test_rcobs.cpp"
   "dzrcobs/test_dzrcobs.cpp"
+  "dictionary/test_dictionary.cpp"
   LINK
   CppUTest::CppUTest
   CppUTest::CppUTestExt

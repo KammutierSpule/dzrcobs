@@ -17,12 +17,12 @@
 // Includes
 // /////////////////////////////////////////////////////////////////////////////
 #include <CppUTest/TestHarness.h>
+#include <CppUTest/UtestMacros.h>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <dzrcobs/rcobs.h>
-#include "CppUTest/UtestMacros.h"
 
 // Definitions
 // /////////////////////////////////////////////////////////////////////////////
@@ -372,7 +372,7 @@ TEST( RCOBS, EncodeLongBuffer )
 	CHECK_EQUAL( 0, memcmp( buffer, &guard, UTEST_GUARD_SIZE ) );
 	CHECK_EQUAL( 0, memcmp( buffer + UTEST_GUARD_SIZE + UTEST_ENCODED_DECODED_DATA_MAX_SIZE, &guard, UTEST_GUARD_SIZE ) );
 
-	uint8_t *decodedBuffer = new uint8_t[UTEST_GUARD_SIZE + ( sizeToEncode + 1 ) + UTEST_GUARD_SIZE];
+	uint8_t *decodedBuffer		= new uint8_t[UTEST_GUARD_SIZE + ( sizeToEncode + 1 ) + UTEST_GUARD_SIZE];
 	uint8_t *decodedBufferPos = nullptr;
 
 	size_t sizeDecoded = 0;

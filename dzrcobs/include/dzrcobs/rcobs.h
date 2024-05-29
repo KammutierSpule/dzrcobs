@@ -42,7 +42,7 @@ typedef struct s_RCOB_ctx
 #endif
 } sRCOBS_ctx;
 
-typedef enum eRCOBS_ret
+typedef enum e_RCOBS_ret
 {
 	RCOBS_RET_SUCCESS = 0,
 	RCOBS_RET_ERR_BAD_ARG,
@@ -50,8 +50,9 @@ typedef enum eRCOBS_ret
 	RCOBS_RET_ERR_BAD_ENCODED_PAYLOAD,
 } eRCOBS_ret;
 
+#define RCOBS_ONE_BYTE_OVERHEAD_EVERY (254)
 #define Z_RCOBS_DIV_ROUND_UP( n, d ) ( ( ( n ) + ( d ) - 1 ) / ( d ) )
-#define RCOBS_MAX_OVERHEAD( size ) Z_RCOBS_DIV_ROUND_UP( ( size ), 254 )
+#define RCOBS_MAX_OVERHEAD( size ) Z_RCOBS_DIV_ROUND_UP( ( size ), RCOBS_ONE_BYTE_OVERHEAD_EVERY )
 #define RCOBS_MAX_ENCODED_SIZE( size ) ( ( size ) + RCOBS_MAX_OVERHEAD( ( size ) ) + ( (size) == 0 ) )
 
 // Declarations
