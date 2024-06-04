@@ -50,7 +50,8 @@ asap_add_library(
   "src/rcobs.c"
   "src/dzrcobs.c"
   "src/dictionary_default.c"
-  "src/dzrcobs_dictionary.c")
+  "src/dzrcobs_dictionary.c"
+  "src/crc8_0xA6.c")
 
 # target_link_libraries(${MODULE_TARGET_NAME} PRIVATE )
 
