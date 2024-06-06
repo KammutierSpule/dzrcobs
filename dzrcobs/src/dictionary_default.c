@@ -5,6 +5,7 @@
 /// English letter frequencies based on the following sites:
 /// https://www3.nd.edu/~busiforc/handouts/cryptography/Letter%20Frequencies.html
 /// https://mathcenter.oxford.emory.edu/site/math125/englishLetterFreqs/
+/// http://norvig.com/mayzner.html
 ///
 ///	@par  Plataform Target:	Any
 /// @par  Tab Size: 2
@@ -24,10 +25,16 @@
 
 // clang-format off
 
-/// Dictionary string, ascendent order, null terminated
+/// Dictionary string, descendent order, null terminated
 const char G_DZRCOBS_DefaultDictionary[] =
-  DICT_ADD_WORD("and", 3)
-  DICT_ADD_WORD("the", 3)
+	DICT_ADD_WORD(2, "\x00\x00")
+	DICT_ADD_WORD(2, "\x00\x01")
+	DICT_ADD_WORD(2, "\x01\x00")
+	DICT_ADD_WORD(2, "\x0D\x0A")
+	DICT_ADD_WORD(3, "\x00\x00\x00")
+	DICT_ADD_WORD(3, "\x00\x00\x01")
+	DICT_ADD_WORD(3, "\x00\x01\x00")
+	DICT_ADD_WORD(3, "\x01\x00\x00")
 ;
 
 // clang-format on

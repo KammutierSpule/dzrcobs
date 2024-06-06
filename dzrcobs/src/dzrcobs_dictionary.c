@@ -17,51 +17,10 @@
 // Includes
 // /////////////////////////////////////////////////////////////////////////////
 #include "dzrcobs_dictionary.h"
+#include <stddef.h>
 #include <string.h>
 #include "dzrcobs/dictionary.h"
-
-#ifndef DZRCOBS_ASSERT
-
-#ifdef ASAP_IS_DEBUG_BUILD
-#include <assert.h>
-#define DZRCOBS_ASSERT( a ) assert( a )
-#else
-#define DZRCOBS_ASSERT( a )
-#endif
-
-#endif
-
-static void DZRCOBS_Dictionary_UpdateVariables( sDICT_ctx *aCtx )
-{
-	const char sizeChar = aCtx->currentWordString[0];
-
-	DZRCOBS_ASSERT( ( sizeChar >= '1' ) && ( sizeChar <= '9' ) );
-
-	aCtx->currentWordLen = (uint8_t)( sizeChar - '0' );
-
-	aCtx->currentWordString++;
-
-	// End of the current word string / start of the next entry with the len
-	// information
-	aCtx->nextWordEntry = aCtx->currentWordString + aCtx->currentWordLen;
-}
-
-eDICT_ret DZRCOBS_Dictionary_ResetSearch( sDICT_ctx *aCtx )
-{
-	if( !aCtx )
-	{
-		return DICT_RET_ERR_BAD_ARG;
-	}
-
-	aCtx->matchedWordEntry	= 0; // 0 means not found
-	aCtx->currentWordString = aCtx->dictionaryBegin;
-	aCtx->matchedWordEntry	= 0;
-	aCtx->matchedWordLen		= 0;
-
-	DZRCOBS_Dictionary_UpdateVariables( aCtx );
-
-	return DICT_RET_SUCCESS;
-}
+#include "dzrcobs_assert.h"
 
 eDICT_ret DZRCOBS_Dictionary_Init( sDICT_ctx *aCtx, const char *aDictionary, size_t aDictionarySize )
 {
@@ -70,78 +29,64 @@ eDICT_ret DZRCOBS_Dictionary_Init( sDICT_ctx *aCtx, const char *aDictionary, siz
 		return DICT_RET_ERR_BAD_ARG;
 	}
 
-	aCtx->dictionaryBegin = aDictionary;
-	aCtx->dictionaryEnd		= aDictionary + aDictionarySize;
+	memset( aCtx, 0x00, sizeof( sDICT_ctx ) );
 
-	return DZRCOBS_Dictionary_ResetSearch( aCtx );
-}
-
-eDICT_ret DZRCOBS_Dictionary_SearchAndInc( sDICT_ctx *aCtx, char aNextChar )
-{
-	if( !aCtx )
+	if( DZRCOBS_Dictionary_IsValid( aDictionary, aDictionarySize ) != DICT_IS_VALID )
 	{
-		return DICT_RET_ERR_BAD_ARG;
+		return DICT_RET_ERR_INVALID;
 	}
 
-	if( *aCtx->currentWordString == aNextChar )
+	// Setup dictionary structure
+
+	const char *pDictBuffer		 = aDictionary;
+	const char *pDictBufferEnd = aDictionary + aDictionarySize - 1; // remove last 0
+	uint8_t currentWordIndex	 = 1;
+	uint8_t currentStride			 = 0;
+
+	sDICT_wordentry *pWordEntry = NULL;
+
+	while( pDictBuffer < pDictBufferEnd )
 	{
-		aCtx->currentWordString++;
+		const uint8_t newStride = ( (uint8_t)( *pDictBuffer ) - '0' ) + 1;
 
-		const bool reachedTheEndOfTheWorld = aCtx->currentWordString == aCtx->nextWordEntry;
-
-		if( reachedTheEndOfTheWorld )
+		if( currentStride != newStride )
 		{
-			aCtx->matchedWordEntry++;
-			aCtx->matchedWordLen = aCtx->currentWordLen;
+			currentStride = newStride;
 
-			const bool reachedTheEndOfTheDict = aCtx->currentWordString == aCtx->dictionaryEnd;
-
-			if( reachedTheEndOfTheDict )
+			if( pWordEntry == NULL )
 			{
-				return DICT_RET_SEARCH_END;
+				pWordEntry = &aCtx->wordSizeTable[0];
+			}
+			else
+			{
+				DZRCOBS_ASSERT( pWordEntry->lastIndex > 0 );
+				pWordEntry->lastIndex--;
+				pWordEntry++;
 			}
 
-			DZRCOBS_Dictionary_UpdateVariables( aCtx );
+			pWordEntry->dictionaryBegin = (const uint8_t *)pDictBuffer;
+			pWordEntry->globalIndex			= currentWordIndex;
+			pWordEntry->strideSize			= currentStride;
+			pWordEntry->lastIndex				= 0;
 		}
 
-		return DICT_RET_THE_SEARCH_CONTINUES;
+		pWordEntry->lastIndex++;
+
+		pDictBuffer += newStride;
+
+		currentWordIndex++;
 	}
 
-	// Since sorted dictionary is used, this means that there are no more words
-	// that may match.
-	return DICT_RET_SEARCH_END;
+	return DICT_RET_SUCCESS;
 }
 
-bool DZRCOBS_Dictionary_GetMatchedWord( const sDICT_ctx *aCtx,
-																				uint8_t *aOutmatchedWordEntry,
-																				uint8_t *aOutmatchedWordLen )
-{
-	DZRCOBS_ASSERT( aCtx );
-	DZRCOBS_ASSERT( aOutmatchedWordEntry );
-	DZRCOBS_ASSERT( aOutmatchedWordLen );
-
-	if( ( !aCtx ) || ( !aOutmatchedWordEntry ) || ( !aOutmatchedWordLen ) )
-	{
-		return false;
-	}
-
-	if( aCtx->matchedWordEntry )
-	{
-		*aOutmatchedWordEntry = aCtx->matchedWordEntry;
-		*aOutmatchedWordLen		= aCtx->matchedWordLen;
-
-		return true;
-	}
-
-	return false;
-}
-
-#define DZRCOBS_MAX_DICT_WORD_SIZE ( 9 )
+#define DZRCOBS_MIN_DICT_WORD_SIZE ( 2 )
+#define DZRCOBS_MAX_DICT_WORD_SIZE ( 5 )
 #define DZRCOBS_MAX_DICT_WORD_COUNTING ( 126 )
 
 eDICTVALID_ret DZRCOBS_Dictionary_IsValid( const char *aDictionary, size_t aDictionarySize )
 {
-	const char *dictionaryEnd = aDictionary + aDictionarySize;
+	const char *pDictBufferEnd = aDictionary + aDictionarySize;
 
 	char tmpBuffer[2][DZRCOBS_MAX_DICT_WORD_SIZE + 1];
 
@@ -149,14 +94,17 @@ eDICTVALID_ret DZRCOBS_Dictionary_IsValid( const char *aDictionary, size_t aDict
 
 	char *pCurrentWordBuffer	= tmpBuffer[0];
 	char *pPreviousWordBuffer = NULL;
+	uint8_t previousWordLen		= 0;
 
-	uint8_t wordCount = 0;
+	uint8_t wordCount					 = 0;
+	uint8_t differentWordCount = 0;
 
-	while( pDictBuffer < dictionaryEnd )
+	while( pDictBuffer < pDictBufferEnd )
 	{
 		char sizeChar = *pDictBuffer++;
 
-		if( !( ( sizeChar >= '1' ) && ( sizeChar <= '9' ) ) )
+		if( !( ( sizeChar >= ( DZRCOBS_MIN_DICT_WORD_SIZE + '0' ) ) &&
+					 ( sizeChar <= ( DZRCOBS_MAX_DICT_WORD_SIZE + '0' ) ) ) )
 		{
 			return DICT_INVALID_WORDSIZE;
 		}
@@ -174,16 +122,23 @@ eDICTVALID_ret DZRCOBS_Dictionary_IsValid( const char *aDictionary, size_t aDict
 			return DICT_INVALID_WORDCOUNTING;
 		}
 
-		if( pPreviousWordBuffer != NULL )
+		if( ( pPreviousWordBuffer != NULL ) && ( previousWordLen == currentWordLen ) )
 		{
-			if( memcmp( pPreviousWordBuffer, pCurrentWordBuffer, currentWordLen ) > 0 )
+			if( memcmp( pPreviousWordBuffer, pCurrentWordBuffer, currentWordLen ) >= 0 )
 			{
 				return DICT_INVALID_NOT_SORTED;
 			}
 		}
 		else
 		{
+			previousWordLen			= currentWordLen;
 			pPreviousWordBuffer = tmpBuffer[1];
+			differentWordCount++;
+
+			if( differentWordCount > DICT_MAX_DIFFERENTWORDSIZES )
+			{
+				return DICT_INVALID_NUMBER_OF_WORDSIZES;
+			}
 		}
 
 		if( *pDictBuffer == 0 )
@@ -207,12 +162,51 @@ eDICTVALID_ret DZRCOBS_Dictionary_IsValid( const char *aDictionary, size_t aDict
 		return DICT_INVALID_WORDCOUNTING;
 	}
 
-	if( ( pDictBuffer + 1 ) < dictionaryEnd )
+	if( ( pDictBuffer + 1 ) < pDictBufferEnd )
 	{
 		return DICT_INVALID_EARLIER_END;
 	}
 
 	return DICT_IS_VALID;
+}
+
+uint8_t DZRCOBS_Dictionary_SearchKeyOnEntry( const uint8_t *aSearchKey, const sDICT_wordentry *aDictWordEntry )
+{
+	DZRCOBS_ASSERT( aSearchKey != NULL );
+	DZRCOBS_ASSERT( aDictWordEntry != NULL );
+
+	const uint8_t *dictionaryBegin = aDictWordEntry->dictionaryBegin + 1; // skip the first byte with entry size
+	const size_t strideSize				 = aDictWordEntry->strideSize;
+	const size_t wordSize					 = strideSize - 1;
+
+	int16_t idxStart = 0;
+	int16_t idxLast	 = aDictWordEntry->lastIndex;
+
+	while( idxStart <= idxLast )
+	{
+		const size_t idxMiddle = ( (size_t)idxStart + (size_t)idxLast ) >> 1;
+
+		const uint8_t *entry = dictionaryBegin + strideSize * idxMiddle;
+		const int cmpResult	 = memcmp( aSearchKey, entry, wordSize );
+
+		if( cmpResult > 0 )
+		{
+			idxStart = (int16_t)( idxMiddle + 1 );
+		}
+		else
+		{
+			if( cmpResult < 0 )
+			{
+				idxLast = (int16_t)( idxMiddle - 1 );
+			}
+			else
+			{
+				return (uint8_t)( idxMiddle + aDictWordEntry->globalIndex );
+			}
+		}
+	}
+
+	return 0;
 }
 
 // EOF

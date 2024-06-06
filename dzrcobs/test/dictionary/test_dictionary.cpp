@@ -19,21 +19,53 @@
 
 #include <CppUTest/TestHarness.h>
 #include <CppUTest/UtestMacros.h>
+#include <cstdint>
 #include <dzrcobs/dictionary.h>
 #include <dzrcobs_dictionary.h>
 
 // Definitions
 // /////////////////////////////////////////////////////////////////////////////
+extern "C"
+{
+uint8_t DZRCOBS_Dictionary_SearchKeyOnEntry( const uint8_t *aSearchKey, const sDICT_wordentry *aDictWordEntry );
+}
 
 // Setup
 // /////////////////////////////////////////////////////////////////////////////
 
 // clang-format off
 // NOLINTBEGIN
+/// Dictionary string, descendent order, null terminated
+static const char s_TEST_Dictionary[] =
+	DICT_ADD_WORD(2, "\x01\x00")
+	DICT_ADD_WORD(2, "\x02\x00")
+	DICT_ADD_WORD(2, "\x03\x00")
+	DICT_ADD_WORD(2, "\x04\x00")
+	DICT_ADD_WORD(2, "\x05\x10")
+	DICT_ADD_WORD(2, "\x05\x20")
+	DICT_ADD_WORD(2, "\x05\x30")
+	DICT_ADD_WORD(2, "\x05\x40")
+	DICT_ADD_WORD(3, "\x00\x00\x00")
+	DICT_ADD_WORD(3, "\x00\x00\x01")
+	DICT_ADD_WORD(3, "\x00\x01\x00")
+	DICT_ADD_WORD(3, "\x01\x00\x00")
+  DICT_ADD_WORD(4, "\x01\x00\x00\x00")
+  DICT_ADD_WORD(5, "\x01\x00\x00\x00\x00")
+;
+// NOLINTEND
+// clang-format on
+
+const size_t s_TEST_Dictionary_size = sizeof( s_TEST_Dictionary );
+
+// clang-format off
+// NOLINTBEGIN
 TEST_GROUP( DICTIONARY ){
 	void setup()
 	{
-    eDICT_ret ret = DZRCOBS_Dictionary_Init( &m_dictCtx, G_DZRCOBS_DefaultDictionary, G_DZRCOBS_DefaultDictionary_size );
+	  eDICTVALID_ret dictRet = DZRCOBS_Dictionary_IsValid( s_TEST_Dictionary, s_TEST_Dictionary_size );
+	  CHECK_EQUAL( DICT_IS_VALID, dictRet );
+
+    eDICT_ret ret = DZRCOBS_Dictionary_Init( &m_dictCtx, s_TEST_Dictionary, s_TEST_Dictionary_size );
     CHECK_EQUAL( DICT_RET_SUCCESS, ret );
 	}
 
@@ -67,32 +99,60 @@ TEST( DICTIONARY, InternalDictionaryValidation )
 	CHECK_EQUAL( DICT_IS_VALID, ret );
 }
 
-TEST( DICTIONARY, DictionarySearch )
-// NOLINTEND
+// NOLINTBEGIN
+TEST( DICTIONARY, SearchKeyOnEntry )
 {
-	eDICT_ret ret = DICT_RET_ERR_INVALID;
+	uint8_t ret = 0;
 
-	ret = DZRCOBS_Dictionary_SearchAndInc( &m_dictCtx, 'a' );
-	CHECK_EQUAL( DICT_RET_THE_SEARCH_CONTINUES, ret );
+	ret = DZRCOBS_Dictionary_SearchKeyOnEntry( ( uint8_t[] ){ 0x00, 0x01 }, &m_dictCtx.wordSizeTable[0] );
+	CHECK_EQUAL( 0, ret );
 
-	ret = DZRCOBS_Dictionary_SearchAndInc( &m_dictCtx, 'n' );
-	CHECK_EQUAL( DICT_RET_THE_SEARCH_CONTINUES, ret );
+	ret = DZRCOBS_Dictionary_SearchKeyOnEntry( ( uint8_t[] ){ 0x00, 0x02 }, &m_dictCtx.wordSizeTable[0] );
+	CHECK_EQUAL( 0, ret );
 
-	ret = DZRCOBS_Dictionary_SearchAndInc( &m_dictCtx, 'd' );
-	CHECK_EQUAL( DICT_RET_THE_SEARCH_CONTINUES, ret );
+	ret = DZRCOBS_Dictionary_SearchKeyOnEntry( ( uint8_t[] ){ 0x00, 0x03 }, &m_dictCtx.wordSizeTable[0] );
+	CHECK_EQUAL( 0, ret );
 
-	ret = DZRCOBS_Dictionary_SearchAndInc( &m_dictCtx, 'z' );
-	CHECK_EQUAL( DICT_RET_SEARCH_END, ret );
+	ret = DZRCOBS_Dictionary_SearchKeyOnEntry( ( uint8_t[] ){ 0x00, 0x04 }, &m_dictCtx.wordSizeTable[0] );
+	CHECK_EQUAL( 0, ret );
 
-	uint8_t matchedWordEntry = 0;
-	uint8_t matchedWordLen	 = 0;
+	ret = DZRCOBS_Dictionary_SearchKeyOnEntry( ( uint8_t[] ){ 0x01, 0x00 }, &m_dictCtx.wordSizeTable[0] );
+	CHECK_EQUAL( 1, ret );
 
-	const bool matched = DZRCOBS_Dictionary_GetMatchedWord( &m_dictCtx, &matchedWordEntry, &matchedWordLen );
+	ret = DZRCOBS_Dictionary_SearchKeyOnEntry( ( uint8_t[] ){ 0x02, 0x00 }, &m_dictCtx.wordSizeTable[0] );
+	CHECK_EQUAL( 2, ret );
 
-	CHECK_EQUAL( true, matched );
-	CHECK( matchedWordEntry > 0 );
-	CHECK( matchedWordLen == 3 );
+	ret = DZRCOBS_Dictionary_SearchKeyOnEntry( ( uint8_t[] ){ 0x03, 0x00 }, &m_dictCtx.wordSizeTable[0] );
+	CHECK_EQUAL( 3, ret );
+
+	ret = DZRCOBS_Dictionary_SearchKeyOnEntry( ( uint8_t[] ){ 0x04, 0x00 }, &m_dictCtx.wordSizeTable[0] );
+	CHECK_EQUAL( 4, ret );
+
+	ret = DZRCOBS_Dictionary_SearchKeyOnEntry( ( uint8_t[] ){ 0x05, 0x10 }, &m_dictCtx.wordSizeTable[0] );
+	CHECK_EQUAL( 5, ret );
+
+	ret = DZRCOBS_Dictionary_SearchKeyOnEntry( ( uint8_t[] ){ 0x05, 0x20 }, &m_dictCtx.wordSizeTable[0] );
+	CHECK_EQUAL( 6, ret );
+
+	ret = DZRCOBS_Dictionary_SearchKeyOnEntry( ( uint8_t[] ){ 0x05, 0x30 }, &m_dictCtx.wordSizeTable[0] );
+	CHECK_EQUAL( 7, ret );
+
+	ret = DZRCOBS_Dictionary_SearchKeyOnEntry( ( uint8_t[] ){ 0x05, 0x40 }, &m_dictCtx.wordSizeTable[0] );
+	CHECK_EQUAL( 8, ret );
+
+	ret = DZRCOBS_Dictionary_SearchKeyOnEntry( ( uint8_t[] ){ 0x00, 0x00, 0x00 }, &m_dictCtx.wordSizeTable[1] );
+	CHECK_EQUAL( 9, ret );
+
+	ret = DZRCOBS_Dictionary_SearchKeyOnEntry( ( uint8_t[] ){ 0x00, 0x00, 0x01 }, &m_dictCtx.wordSizeTable[1] );
+	CHECK_EQUAL( 10, ret );
+
+	ret = DZRCOBS_Dictionary_SearchKeyOnEntry( ( uint8_t[] ){ 0x00, 0x01, 0x00 }, &m_dictCtx.wordSizeTable[1] );
+	CHECK_EQUAL( 11, ret );
+
+	ret = DZRCOBS_Dictionary_SearchKeyOnEntry( ( uint8_t[] ){ 0x01, 0x00, 0x00 }, &m_dictCtx.wordSizeTable[1] );
+	CHECK_EQUAL( 12, ret );
 }
+// NOLINTEND
 
 // EOF
 // /////////////////////////////////////////////////////////////////////////////

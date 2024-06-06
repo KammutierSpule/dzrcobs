@@ -32,7 +32,7 @@ extern "C" {
 // /////////////////////////////////////////////////////////////////////////////
 
 // Helper to construct a entry on the dictionary
-#define DICT_ADD_WORD( word, len ) #len word
+#define DICT_ADD_WORD( len, word ) #len word
 
 typedef enum e_DICTVALID_ret
 {
@@ -42,6 +42,7 @@ typedef enum e_DICTVALID_ret
 	DICT_INVALID_WORDCOUNTING,
   DICT_INVALID_WORDSIZE,
   DICT_INVALID_EARLIER_END,
+  DICT_INVALID_NUMBER_OF_WORDSIZES,
 } eDICTVALID_ret;
 
 
@@ -57,7 +58,7 @@ typedef enum e_DICTVALID_ret
  * @retval DICT_IS_VALID Dictionary is well formed.
  * @retval DICT_INVALID_NOT_SORTED Is not sorted
  * @retval DICT_INVALID_OUTOFBOUNDS Out of bounds
- * (internal word sizes does not match the dictionary size)
+ *         (internal word sizes does not match the dictionary size)
  * @retval DICT_INVALID_WORDCOUNTING Word counting exceeded.
  * @retval DICT_INVALID_WORDSIZE If there is an invalid word size
  */

@@ -31,24 +31,25 @@ extern "C" {
 // Definitions
 // /////////////////////////////////////////////////////////////////////////////
 
+#define DICT_MAX_DIFFERENTWORDSIZES ( 4 )
+
+/// Dictionary entry for different word sizes
+typedef struct s_DICT_wordentry
+{
+	const uint8_t *dictionaryBegin; ///< Origin pointer to the dictionary entry
+	uint8_t lastIndex;							///< Number of entries-1
+	uint8_t globalIndex;						///< Start index for this dictionary entry on the global dictionary
+	uint8_t strideSize;							///< word size + 1, that is the size of each word entry
+} sDICT_wordentry;
+
 typedef struct s_DICT_ctx
 {
-	const char *dictionaryBegin; ///< Origin pointer to the dictionary
-	const char *dictionaryEnd;	 ///< Last position pointer, 1 position outside buffer range
-	const char *currentWordString;
-	const char *nextWordEntry;
-
-	/// Current last entry entry found on search. This is best full word index (1..126) found so far.
-	uint8_t matchedWordEntry;
-	uint8_t matchedWordLen;
-	uint8_t currentWordLen;
+	sDICT_wordentry wordSizeTable[DICT_MAX_DIFFERENTWORDSIZES];
 } sDICT_ctx;
 
 typedef enum e_DICT_ret
 {
 	DICT_RET_SUCCESS = 0,
-	DICT_RET_SEARCH_END,
-	DICT_RET_THE_SEARCH_CONTINUES,
 	DICT_RET_ERR_BAD_ARG,
 	DICT_RET_ERR_INVALID,
 } eDICT_ret;
@@ -67,40 +68,18 @@ typedef enum e_DICT_ret
 eDICT_ret DZRCOBS_Dictionary_Init( sDICT_ctx *aCtx, const char *aDictionary, size_t aDictionarySize );
 
 /**
- * @brief Reset search parameters and start from beginning of the dictionary
+ * @brief Search for a Key in the dictionary
  *
- * @param aCtx The context
- * @retval DICT_RET_SUCCESS if all ok.
- * @retval DICT_RET_ERR_BAD_ARG if something wrong.
+ * @param aCtx The context to be used
+ * @param aSearchKey The key buffer data
+ * @param aSearchKeySize The key buffer size
+ * @param aOutKeySizeFound The output with the key size found (2..5)
+ * @return uint8_t 0 not found, 1..126 index of the key found
  */
-eDICT_ret DZRCOBS_Dictionary_ResetSearch( sDICT_ctx *aCtx );
-
-/**
- * @brief Search for a char in the dictionary and increment the internal search
- *
- * @param aCtx
- * @param aNextChar The char to be tested
- * @retval DICT_RET_THE_SEARCH_CONTINUES The aNextChar matches, the search can
- * continue.
- * @retval DICT_RET_SEARCH_END The aNextChar does not match and there is no need
- * to continue to search more. User must call other functions and reset search.
- * this function cannot be called anymore after this return.
- * @retval DICT_RET_ERR_BAD_ARG In case something wrong with the arguments.
- */
-eDICT_ret DZRCOBS_Dictionary_SearchAndInc( sDICT_ctx *aCtx, char aNextChar );
-
-/**
- * @brief Get the matched word entry position and the word len if there was a
- * match. if no previous full match word, return false and don't set the values
- *
- * @param aOutmatchedWordEntry
- * @param aOutmatchedWordLen
- * @return true if there was a previous match word. out arguments were set.
- * @return false if no previous matched word. out arguments untouched.
- */
-bool DZRCOBS_Dictionary_GetMatchedWord( const sDICT_ctx *aCtx,
-																				uint8_t *aOutmatchedWordEntry,
-																				uint8_t *aOutmatchedWordLen );
+uint8_t DZRCOBS_Dictionary_Search( const sDICT_ctx *aCtx,
+																	 const uint8_t *aSearchKey,
+																	 size_t aSearchKeySize,
+																	 size_t *aOutKeySizeFound );
 
 #ifdef __cplusplus
 }

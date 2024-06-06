@@ -17,6 +17,7 @@ asap_add_test(
   UNIT_TEST
   SRCS
   "main.cpp"
+  "crc/test_crc8.cpp"
   "rcobs/test_rcobs.cpp"
   "dzrcobs/test_dzrcobs.cpp"
   "dictionary/test_dictionary.cpp"

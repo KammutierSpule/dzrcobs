@@ -27,5 +27,7 @@ Checks: >
     -hicpp-avoid-c-arrays,
     -hicpp-use-auto,
     -cppcoreguidelines-avoid-c-arrays,
+    -google-readability-casting,
+    -modernize-avoid-c-arrays,
 
 HeaderFilterRegex: ".*/[common|logging]/.*"
