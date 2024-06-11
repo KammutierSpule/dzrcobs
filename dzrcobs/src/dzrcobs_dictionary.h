@@ -37,7 +37,8 @@ extern "C" {
 typedef struct s_DICT_wordentry
 {
 	const uint8_t *dictionaryBegin; ///< Origin pointer to the dictionary entry
-	uint8_t lastIndex;							///< Number of entries-1
+	uint8_t nEntries;								///< Number of entries
+	uint8_t lastIndex;							///< Number of entries -1
 	uint8_t globalIndex;						///< Start index for this dictionary entry on the global dictionary
 	uint8_t strideSize;							///< word size + 1, that is the size of each word entry
 } sDICT_wordentry;

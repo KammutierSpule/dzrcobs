@@ -152,6 +152,23 @@ TEST( DICTIONARY, SearchKeyOnEntry )
 	ret = DZRCOBS_Dictionary_SearchKeyOnEntry( ( uint8_t[] ){ 0x01, 0x00, 0x00 }, &m_dictCtx.wordSizeTable[1] );
 	CHECK_EQUAL( 12, ret );
 }
+
+// NOLINTEND
+
+// NOLINTBEGIN
+TEST( DICTIONARY, SearchKey )
+{
+	uint8_t ret = 0;
+	size_t keySizeFound;
+
+	ret = DZRCOBS_Dictionary_Search( &m_dictCtx, ( uint8_t[] ){ 0x00, 0x01 }, 2, &keySizeFound );
+	CHECK_EQUAL( 0, ret );
+
+	ret = DZRCOBS_Dictionary_Search( &m_dictCtx, ( uint8_t[] ){ 0x01, 0x00, 0xFF }, 3, &keySizeFound );
+	CHECK_EQUAL( 1, ret );
+  CHECK_EQUAL( 2, keySizeFound );
+}
+
 // NOLINTEND
 
 // EOF
