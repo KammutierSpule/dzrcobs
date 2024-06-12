@@ -20,8 +20,7 @@
 #include <CppUTest/TestHarness.h>
 #include <CppUTest/UtestMacros.h>
 #include <cstdint>
-#include <dzrcobs/dictionary.h>
-#include <dzrcobs_dictionary.h>
+#include <dzrcobs/dzrcobs_dictionary.h>
 
 // Definitions
 // /////////////////////////////////////////////////////////////////////////////

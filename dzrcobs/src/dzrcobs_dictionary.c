@@ -16,10 +16,9 @@
 
 // Includes
 // /////////////////////////////////////////////////////////////////////////////
-#include "dzrcobs_dictionary.h"
+#include "dzrcobs/dzrcobs_dictionary.h"
 #include <stddef.h>
 #include <string.h>
-#include "dzrcobs/dictionary.h"
 #include "dzrcobs_assert.h"
 
 eDICT_ret DZRCOBS_Dictionary_Init( sDICT_ctx *aCtx, const char *aDictionary, size_t aDictionarySize )

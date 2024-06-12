@@ -1,5 +1,5 @@
 // /////////////////////////////////////////////////////////////////////////////
-///	@file dictionary.h
+///	@file dzrcobs_dictionary.h
 ///	@brief
 ///
 ///	@par  Plataform Target:	Any
@@ -13,8 +13,8 @@
 /// SPDX-License-Identifier: BSD-3-Clause
 ///
 // /////////////////////////////////////////////////////////////////////////////
-#ifndef _DICTIONARY_H_
-#define _DICTIONARY_H_
+#ifndef _DZRCOBS_DICTIONARY_H_
+#define _DZRCOBS_DICTIONARY_H_
 
 // Includes
 // /////////////////////////////////////////////////////////////////////////////
@@ -45,6 +45,29 @@ typedef enum e_DICTVALID_ret
   DICT_INVALID_NUMBER_OF_WORDSIZES,
 } eDICTVALID_ret;
 
+#define DICT_MAX_DIFFERENTWORDSIZES ( 4 )
+
+/// Dictionary entry for different word sizes
+typedef struct s_DICT_wordentry
+{
+	const uint8_t *dictionaryBegin; ///< Origin pointer to the dictionary entry
+	uint8_t nEntries;								///< Number of entries
+	uint8_t lastIndex;							///< Number of entries -1
+	uint8_t globalIndex;						///< Start index for this dictionary entry on the global dictionary
+	uint8_t strideSize;							///< word size + 1, that is the size of each word entry
+} sDICT_wordentry;
+
+typedef struct s_DICT_ctx
+{
+	sDICT_wordentry wordSizeTable[DICT_MAX_DIFFERENTWORDSIZES];
+} sDICT_ctx;
+
+typedef enum e_DICT_ret
+{
+	DICT_RET_SUCCESS = 0,
+	DICT_RET_ERR_BAD_ARG,
+	DICT_RET_ERR_INVALID,
+} eDICT_ret;
 
 // Declarations
 // /////////////////////////////////////////////////////////////////////////////
@@ -63,6 +86,30 @@ typedef enum e_DICTVALID_ret
  * @retval DICT_INVALID_WORDSIZE If there is an invalid word size
  */
 eDICTVALID_ret DZRCOBS_Dictionary_IsValid( const char *aDictionary, size_t aDictionarySize );
+
+/**
+ * @brief Initialize a dictionary context
+ *
+ * @param aCtx The context to store this dictionary session
+ * @param aDictionary Pointer to the dictionary string array that will be used
+ * @param aDictionarySize Size of dictionary string
+ * @return eDICT_ret DICT_RET_SUCCESS if all good with parameters
+ */
+eDICT_ret DZRCOBS_Dictionary_Init( sDICT_ctx *aCtx, const char *aDictionary, size_t aDictionarySize );
+
+/**
+ * @brief Search for a Key in the dictionary
+ *
+ * @param aCtx The context to be used
+ * @param aSearchKey The key buffer data
+ * @param aSearchKeySize The key buffer size
+ * @param aOutKeySizeFound The output with the key size found (2..5)
+ * @return uint8_t 0 not found, 1..126 index of the key found
+ */
+uint8_t DZRCOBS_Dictionary_Search( const sDICT_ctx *aCtx,
+																	 const uint8_t *aSearchKey,
+																	 size_t aSearchKeySize,
+																	 size_t *aOutKeySizeFound );
 
 // External declaration of default dictionary
 extern const char G_DZRCOBS_DefaultDictionary[];

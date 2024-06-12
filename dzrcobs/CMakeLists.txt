@@ -45,7 +45,7 @@ asap_add_library(
   # Headers
   "include/dzrcobs/rcobs.h"
   "include/dzrcobs/dzrcobs.h"
-  "include/dzrcobs/dictionary.h"
+  "include/dzrcobs/dzrcobs_dictionary.h"
   # Sources
   "src/rcobs.c"
   "src/dzrcobs.c"

@@ -21,7 +21,7 @@
 
 // Includes
 // /////////////////////////////////////////////////////////////////////////////
-#include <dzrcobs/dictionary.h>
+#include <dzrcobs/dzrcobs_dictionary.h>
 
 // clang-format off
 
