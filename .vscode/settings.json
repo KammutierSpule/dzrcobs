@@ -299,4 +299,5 @@
   "memory-view.showMemoryPanel": true,
   "coverage-gutters.showGutterCoverage": false,
   "coverage-gutters.showLineCoverage": true,
+  "editor.insertSpaces": false,
 }

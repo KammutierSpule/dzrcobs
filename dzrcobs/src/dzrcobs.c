@@ -18,29 +18,81 @@
 // /////////////////////////////////////////////////////////////////////////////
 #include <dzrcobs/dzrcobs.h>
 #include <stdbool.h>
+#include "crc8.h"
+#include "dzrcobs_assert.h"
 
 // Definitions
 // /////////////////////////////////////////////////////////////////////////////
 #define DZRCOBS_CODE_JUMP ( 0x7F )
 
+eDZRCOBS_ret dzrcobs_encode_inc_plain( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aSrcBufSize );
+eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aSrcBufSize );
+
 // Implementation
 // /////////////////////////////////////////////////////////////////////////////
 
-eDZRCOBS_ret dzrcobs_encode_inc_begin( sDZRCOBS_ctx *aCtx, uint8_t *aDstBuf, size_t aDstBufSize )
+eDZRCOBS_ret dzrcobs_encode_set_dictionary( sDZRCOBS_ctx *aCtx,
+																						const sDICT_ctx *aDictCtx,
+																						eDZRCOBS_encoding aDictEncoding )
+{
+	if( ( !aCtx ) || ( !aDictCtx ) ||
+			( !( ( aDictEncoding == DZRCOBS_USING_DICT_1 ) || ( aDictEncoding == DZRCOBS_USING_DICT_2 ) ) ) )
+	{
+		return DZRCOBS_RET_ERR_BAD_ARG;
+	}
+
+	const uint8_t idx = (uint8_t)( aDictEncoding - DZRCOBS_USING_DICT_1 );
+	aCtx->pDict[idx]	= aDictCtx;
+
+	return DZRCOBS_RET_SUCCESS;
+}
+
+eDZRCOBS_ret dzrcobs_encode_inc_begin( sDZRCOBS_ctx *aCtx,
+																			 eDZRCOBS_encoding aEncoding,
+																			 uint8_t *aDstBuf,
+																			 size_t aDstBufSize )
 {
 	if( ( !aCtx ) || ( !aDstBuf ) || ( aDstBufSize < 2 ) )
 	{
 		return DZRCOBS_RET_ERR_BAD_ARG;
 	}
 
-	aCtx->pDst		= aDstBuf;
-	aCtx->pCurDst = aDstBuf;
-	aCtx->pDstEnd = aDstBuf + aDstBufSize;
-	aCtx->code		= 1;
+#if DZRCOBS_USE_DICT == 1
+	if( ( ( aEncoding == DZRCOBS_USING_DICT_1 ) && ( aCtx->pDict[0] == NULL ) ) ||
+			( ( aEncoding == DZRCOBS_USING_DICT_2 ) && ( aCtx->pDict[1] == NULL ) ) )
+	{
+		return DZRCOBS_RET_ERR_BAD_ARG;
+	}
+#endif
+
+	aCtx->pDst		 = aDstBuf;
+	aCtx->pCurDst	 = aDstBuf;
+	aCtx->pDstEnd	 = aDstBuf + aDstBufSize;
+	aCtx->code		 = 1;
+	aCtx->crc			 = DZRCOBS_CRC_INIT_VAL;
+	aCtx->encoding = aEncoding;
 
 #ifdef ASAP_IS_DEBUG_BUILD
 	aCtx->writeCounter = 0;
 #endif
+
+	switch( aEncoding )
+	{
+	case DZRCOBS_PLAIN:
+		aCtx->encFunc = dzrcobs_encode_inc_plain;
+		break;
+
+	case DZRCOBS_USING_DICT_1:
+	case DZRCOBS_USING_DICT_2:
+		// aCtx->encFunc = dzrcobs_encode_inc_dictionary;
+		break;
+	case DZRCOBS_RESERVED:
+	default:
+		aCtx->encFunc = NULL;
+		break;
+	}
+
+	DZRCOBS_ASSERT( aCtx->encFunc != NULL );
 
 	return DZRCOBS_RET_SUCCESS;
 }
@@ -58,12 +110,28 @@ eDZRCOBS_ret dzrcobs_encode_inc_end( sDZRCOBS_ctx *aCtx, size_t *aOutSizeEncoded
 	}
 
 #ifdef ASAP_IS_DEBUG_BUILD
-	aCtx->writeCounter++;
+	aCtx->writeCounter += 3;
 #endif
+
+	aCtx->crc = DZRCOBS_CRC( aCtx->crc, aCtx->code );
 
 	*aCtx->pCurDst++ = aCtx->code;
 
+	const uint8_t encodingByte = (uint8_t)( aCtx->user6bits << 2 ) | ( (uint8_t)aCtx->encoding & 0x03 );
+
+	DZRCOBS_ASSERT( encodingByte != 0 );
+
+	aCtx->crc = DZRCOBS_CRC( aCtx->crc, encodingByte );
+
+	*aCtx->pCurDst++ = encodingByte;
+
+	const uint8_t finalCrc = aCtx->crc;
+
+	*aCtx->pCurDst++ = ( finalCrc == 0x00 ) ? 0xFF : finalCrc; // Avoid zero ending CRC.
+
 	*aOutSizeEncoded = (size_t)( aCtx->pCurDst - aCtx->pDst );
+
+	aCtx->encFunc = NULL;
 
 	return DZRCOBS_RET_SUCCESS;
 }
@@ -75,6 +143,11 @@ eDZRCOBS_ret dzrcobs_encode_inc( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, siz
 		return DZRCOBS_RET_ERR_BAD_ARG;
 	}
 
+	if( aCtx->encFunc == NULL )
+	{
+		return DZRCOBS_RET_ERR_NOTINITIALIZED;
+	}
+
 	if( aSrcBufSize == 0 )
 	{
 		return DZRCOBS_RET_SUCCESS;
@@ -82,12 +155,17 @@ eDZRCOBS_ret dzrcobs_encode_inc( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, siz
 
 	const size_t maxEncodedSize = DZRCOBS_MAX_ENCODED_SIZE( aSrcBufSize );
 
-	uint8_t *curDst = aCtx->pCurDst;
-
-	if( ( curDst + maxEncodedSize ) > aCtx->pDstEnd )
+	if( ( aCtx->pCurDst + 2 + maxEncodedSize ) > aCtx->pDstEnd )
 	{
 		return DZRCOBS_RET_ERR_OVERFLOW;
 	}
+
+	return aCtx->encFunc( aCtx, aSrcBuf, aSrcBufSize );
+}
+
+eDZRCOBS_ret dzrcobs_encode_inc_plain( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aSrcBufSize )
+{
+	uint8_t *curDst = aCtx->pCurDst;
 
 #ifdef ASAP_IS_DEBUG_BUILD
 	size_t srcReadCounter = 0;
@@ -110,6 +188,7 @@ eDZRCOBS_ret dzrcobs_encode_inc( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, siz
 #ifdef ASAP_IS_DEBUG_BUILD
 			aCtx->writeCounter++;
 #endif
+			aCtx->crc = DZRCOBS_CRC( aCtx->crc, curCode );
 
 			*curDst++ = curCode;
 			curCode		= 1;
@@ -120,6 +199,7 @@ eDZRCOBS_ret dzrcobs_encode_inc( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, siz
 			aCtx->writeCounter++;
 #endif
 
+			aCtx->crc = DZRCOBS_CRC( aCtx->crc, byte );
 			*curDst++ = byte;
 			curCode++;
 
@@ -129,6 +209,7 @@ eDZRCOBS_ret dzrcobs_encode_inc( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, siz
 				aCtx->writeCounter++;
 #endif
 
+				aCtx->crc = DZRCOBS_CRC( aCtx->crc, curCode );
 				*curDst++ = curCode;
 				curCode		= 1;
 			}
@@ -137,95 +218,6 @@ eDZRCOBS_ret dzrcobs_encode_inc( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, siz
 
 	aCtx->code		= curCode;
 	aCtx->pCurDst = curDst;
-
-	return DZRCOBS_RET_SUCCESS;
-}
-
-eDZRCOBS_ret dzrcobs_decode( const uint8_t *aSrcBufEncoded,
-														 size_t aSrcBufEncodedLen,
-														 uint8_t *aDstBufDecoded,
-														 size_t aDstBufDecodedSize,
-														 size_t *aOutDecodedLen,
-														 uint8_t **aOutDecodedStartPos )
-{
-	if( ( !aSrcBufEncoded ) || ( !aDstBufDecoded ) || ( !aOutDecodedLen ) || ( !aOutDecodedStartPos ) ||
-			( aDstBufDecodedSize == 0 ) || ( aSrcBufEncodedLen < 2 ) )
-	{
-		return DZRCOBS_RET_ERR_BAD_ARG;
-	}
-
-	const uint8_t *pBeginEncoded = aSrcBufEncoded;
-	const uint8_t *pReadEncoded	 = aSrcBufEncoded + aSrcBufEncodedLen - 1;
-
-	const uint8_t *pBeginDecoded	= aDstBufDecoded;
-	uint8_t *pWriteDecodedInitial = aDstBufDecoded + aDstBufDecodedSize;
-	uint8_t *pWriteDecoded				= pWriteDecodedInitial; // starts out of buffer, will be decremented latter
-
-#ifdef ASAP_IS_DEBUG_BUILD
-	size_t totalWrite = 0;
-	size_t totalRead	= 0;
-#endif
-
-	while( pReadEncoded >= pBeginEncoded )
-	{
-		uint8_t code = *pReadEncoded;
-
-		if( code == 0 )
-		{
-			return DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD;
-		}
-
-		if( ( code != DZRCOBS_CODE_JUMP ) &&					// Only adds if the new code is not skipping
-				( pWriteDecoded != pWriteDecodedInitial ) // Only adds if this is not the first run
-		)
-		{
-			pWriteDecoded--;
-			*pWriteDecoded = 0;
-
-#ifdef ASAP_IS_DEBUG_BUILD
-			totalWrite++;
-#endif
-		}
-
-		code--;
-		if( ( pWriteDecoded - code ) < pBeginDecoded )
-		{
-			return DZRCOBS_RET_ERR_OVERFLOW;
-		}
-
-		pReadEncoded--;
-
-#ifdef ASAP_IS_DEBUG_BUILD
-		totalRead++;
-#endif
-
-		while( code )
-		{
-			code--;
-
-			const uint8_t byte = *pReadEncoded--;
-
-#ifdef ASAP_IS_DEBUG_BUILD
-			totalRead++;
-#endif
-
-			if( byte == 0 )
-			{
-				return DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD;
-			}
-
-			pWriteDecoded--;
-			*pWriteDecoded = byte;
-
-#ifdef ASAP_IS_DEBUG_BUILD
-			totalWrite++;
-#endif
-		}
-	}
-
-	*aOutDecodedStartPos = pWriteDecoded;
-
-	*aOutDecodedLen = aDstBufDecodedSize - (size_t)( pWriteDecoded - aDstBufDecoded );
 
 	return DZRCOBS_RET_SUCCESS;
 }
