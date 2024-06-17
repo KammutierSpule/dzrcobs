@@ -211,16 +211,16 @@ TEST( DZRCOBS, DecodeInvalidArgs )
 	decodeCtx.dstBufDecoded			= buffer + UTEST_GUARD_SIZE;
 	decodeCtx.dstBufDecodedSize = 1;
 
-	ret = dzrcobs_decode( &decodeCtx, &decodedLen, &decodedPos, NULL );
+	ret = dzrcobs_decode( &decodeCtx, &decodedLen, &decodedPos, nullptr );
 	CHECK_EQUAL( DZRCOBS_RET_ERR_BAD_ARG, ret );
 
-	ret = dzrcobs_decode( &decodeCtx, &decodedLen, NULL, &user6bitDataRightAlgn );
+	ret = dzrcobs_decode( &decodeCtx, &decodedLen, nullptr, &user6bitDataRightAlgn );
 	CHECK_EQUAL( DZRCOBS_RET_ERR_BAD_ARG, ret );
 
-	ret = dzrcobs_decode( &decodeCtx, NULL, &decodedPos, &user6bitDataRightAlgn );
+	ret = dzrcobs_decode( &decodeCtx, nullptr, &decodedPos, &user6bitDataRightAlgn );
 	CHECK_EQUAL( DZRCOBS_RET_ERR_BAD_ARG, ret );
 
-	ret = dzrcobs_decode( NULL, &decodedLen, &decodedPos, &user6bitDataRightAlgn );
+	ret = dzrcobs_decode( nullptr, &decodedLen, &decodedPos, &user6bitDataRightAlgn );
 	CHECK_EQUAL( DZRCOBS_RET_ERR_BAD_ARG, ret );
 }
 
