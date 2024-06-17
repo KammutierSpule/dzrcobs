@@ -69,6 +69,8 @@ typedef enum e_DICT_ret
 	DICT_RET_ERR_INVALID,
 } eDICT_ret;
 
+#define DZRCOBS_DICT_N ( 2 )
+
 // Declarations
 // /////////////////////////////////////////////////////////////////////////////
 

@@ -43,6 +43,7 @@ typedef enum e_DZRCOBS_ret
 	DZRCOBS_RET_ERR_OVERFLOW,
 	DZRCOBS_RET_ERR_NOTINITIALIZED,
 	DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD,
+	DZRCOBS_RET_ERR_CRC
 } eDZRCOBS_ret;
 
 typedef enum e_DZRCOBS_encoding
@@ -56,8 +57,6 @@ typedef enum e_DZRCOBS_encoding
 typedef struct s_DZRCOB_ctx sDZRCOBS_ctx;
 
 typedef eDZRCOBS_ret ( *dzrcobs_encode_inc_funcPtr )( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aSrcBufSize );
-
-#define DZRCOBS_DICT_N ( 2 )
 
 struct s_DZRCOB_ctx
 {
@@ -86,6 +85,8 @@ struct s_DZRCOB_ctx
 #define Z_DZRCOBS_DIV_ROUND_UP( n, d ) ( ( ( n ) + ( d ) - 1 ) / ( d ) )
 #define DZRCOBS_MAX_OVERHEAD( size ) Z_DZRCOBS_DIV_ROUND_UP( ( size ), DZRCOBS_ONE_BYTE_OVERHEAD_EVERY )
 #define DZRCOBS_MAX_ENCODED_SIZE( size ) ( ( size ) + DZRCOBS_MAX_OVERHEAD( ( size ) ) + ( ( size ) == 0 ) )
+
+#define DZRCOBS_CRC_VALUE_WHEN_CRC_IS_ZERO (0xFF)
 
 // Declarations
 // /////////////////////////////////////////////////////////////////////////////

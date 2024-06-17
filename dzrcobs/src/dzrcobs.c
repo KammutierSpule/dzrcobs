@@ -127,7 +127,7 @@ eDZRCOBS_ret dzrcobs_encode_inc_end( sDZRCOBS_ctx *aCtx, size_t *aOutSizeEncoded
 
 	const uint8_t finalCrc = aCtx->crc;
 
-	*aCtx->pCurDst++ = ( finalCrc == 0x00 ) ? 0xFF : finalCrc; // Avoid zero ending CRC.
+	*aCtx->pCurDst++ = ( finalCrc == 0x00 ) ? DZRCOBS_CRC_VALUE_WHEN_CRC_IS_ZERO : finalCrc; // Avoid zero ending CRC.
 
 	*aOutSizeEncoded = (size_t)( aCtx->pCurDst - aCtx->pDst );
 
