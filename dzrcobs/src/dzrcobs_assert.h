@@ -14,6 +14,8 @@
 /// SPDX-License-Identifier: BSD-3-Clause
 ///
 // /////////////////////////////////////////////////////////////////////////////
+#ifndef _DZRCOBS_ASSERT_H_
+#define _DZRCOBS_ASSERT_H_
 
 // Includes
 // /////////////////////////////////////////////////////////////////////////////
@@ -25,6 +27,18 @@
 #define DZRCOBS_ASSERT( a ) assert( a )
 #else
 #define DZRCOBS_ASSERT( a )
+#endif
+
+#endif
+
+#ifndef DZRCOBS_RUN_ONDEBUG
+
+#ifdef ASAP_IS_DEBUG_BUILD
+#define DZRCOBS_RUN_ONDEBUG( a ) ( a )
+#else
+#define DZRCOBS_RUN_ONDEBUG( a )
+#endif
+
 #endif
 
 #endif

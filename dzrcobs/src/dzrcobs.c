@@ -19,6 +19,7 @@
 #include <dzrcobs/dzrcobs.h>
 #include <stdbool.h>
 #include "crc8.h"
+#include "dzrcobs/dzrcobs_dictionary.h"
 #include "dzrcobs_assert.h"
 
 // Definitions
@@ -72,9 +73,9 @@ eDZRCOBS_ret dzrcobs_encode_inc_begin( sDZRCOBS_ctx *aCtx,
 	aCtx->crc			 = DZRCOBS_CRC_INIT_VAL;
 	aCtx->encoding = aEncoding;
 
-#ifdef ASAP_IS_DEBUG_BUILD
-	aCtx->writeCounter = 0;
-#endif
+	aCtx->isPreviousCodeDictionary = false;
+
+	DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter = 0 );
 
 	switch( aEncoding )
 	{
@@ -84,7 +85,7 @@ eDZRCOBS_ret dzrcobs_encode_inc_begin( sDZRCOBS_ctx *aCtx,
 
 	case DZRCOBS_USING_DICT_1:
 	case DZRCOBS_USING_DICT_2:
-		// aCtx->encFunc = dzrcobs_encode_inc_dictionary;
+		aCtx->encFunc = dzrcobs_encode_inc_dictionary;
 		break;
 	case DZRCOBS_RESERVED:
 	default:
@@ -109,13 +110,16 @@ eDZRCOBS_ret dzrcobs_encode_inc_end( sDZRCOBS_ctx *aCtx, size_t *aOutSizeEncoded
 		return DZRCOBS_RET_ERR_OVERFLOW;
 	}
 
-#ifdef ASAP_IS_DEBUG_BUILD
-	aCtx->writeCounter += 3;
-#endif
+	
 
-	aCtx->crc = DZRCOBS_CRC( aCtx->crc, aCtx->code );
+	if( !aCtx->isPreviousCodeDictionary )
+	{
+		DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
 
-	*aCtx->pCurDst++ = aCtx->code;
+		aCtx->crc = DZRCOBS_CRC( aCtx->crc, aCtx->code );
+
+		*aCtx->pCurDst++ = aCtx->code;
+	}
 
 	const uint8_t encodingByte = (uint8_t)( aCtx->user6bits << 2 ) | ( (uint8_t)aCtx->encoding & 0x03 );
 
@@ -123,10 +127,12 @@ eDZRCOBS_ret dzrcobs_encode_inc_end( sDZRCOBS_ctx *aCtx, size_t *aOutSizeEncoded
 
 	aCtx->crc = DZRCOBS_CRC( aCtx->crc, encodingByte );
 
+	DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
 	*aCtx->pCurDst++ = encodingByte;
 
 	const uint8_t finalCrc = aCtx->crc;
 
+	DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
 	*aCtx->pCurDst++ = ( finalCrc == 0x00 ) ? DZRCOBS_CRC_VALUE_WHEN_CRC_IS_ZERO : finalCrc; // Avoid zero ending CRC.
 
 	*aOutSizeEncoded = (size_t)( aCtx->pCurDst - aCtx->pDst );
@@ -155,7 +161,7 @@ eDZRCOBS_ret dzrcobs_encode_inc( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, siz
 
 	const size_t maxEncodedSize = DZRCOBS_MAX_ENCODED_SIZE( aSrcBufSize );
 
-	if( ( aCtx->pCurDst + 2 + maxEncodedSize ) > aCtx->pDstEnd )
+	if( ( aCtx->pCurDst + DZRCOBS_FRAME_HEADER_SIZE + maxEncodedSize ) > aCtx->pDstEnd )
 	{
 		return DZRCOBS_RET_ERR_OVERFLOW;
 	}
@@ -185,9 +191,8 @@ eDZRCOBS_ret dzrcobs_encode_inc_plain( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBu
 
 		if( byte == 0 )
 		{
-#ifdef ASAP_IS_DEBUG_BUILD
-			aCtx->writeCounter++;
-#endif
+			DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
+
 			aCtx->crc = DZRCOBS_CRC( aCtx->crc, curCode );
 
 			*curDst++ = curCode;
@@ -195,9 +200,7 @@ eDZRCOBS_ret dzrcobs_encode_inc_plain( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBu
 		}
 		else
 		{
-#ifdef ASAP_IS_DEBUG_BUILD
-			aCtx->writeCounter++;
-#endif
+			DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
 
 			aCtx->crc = DZRCOBS_CRC( aCtx->crc, byte );
 			*curDst++ = byte;
@@ -205,9 +208,7 @@ eDZRCOBS_ret dzrcobs_encode_inc_plain( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBu
 
 			if( curCode == DZRCOBS_CODE_JUMP )
 			{
-#ifdef ASAP_IS_DEBUG_BUILD
-				aCtx->writeCounter++;
-#endif
+				DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
 
 				aCtx->crc = DZRCOBS_CRC( aCtx->crc, curCode );
 				*curDst++ = curCode;
@@ -221,6 +222,97 @@ eDZRCOBS_ret dzrcobs_encode_inc_plain( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBu
 
 	return DZRCOBS_RET_SUCCESS;
 }
+
+#if DZRCOBS_USE_DICT == 1
+eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aSrcBufSize )
+{
+	DZRCOBS_ASSERT( aCtx != NULL );
+	DZRCOBS_ASSERT( aSrcBuf != NULL );
+	DZRCOBS_ASSERT( aSrcBufSize > 0 );
+	DZRCOBS_ASSERT( ( aCtx->encoding == DZRCOBS_USING_DICT_1 ) || ( aCtx->encoding == DZRCOBS_USING_DICT_2 ) );
+
+	uint8_t *curDst = aCtx->pCurDst;
+
+	uint8_t curCode = aCtx->code;
+
+	const sDICT_ctx *pDict = aCtx->pDict[aCtx->encoding - DZRCOBS_USING_DICT_1];
+
+	while( aSrcBufSize )
+	{
+		size_t keySizeFound = 0;
+		uint8_t foundIdx		= DZRCOBS_Dictionary_Search( pDict, aSrcBuf, aSrcBufSize, &keySizeFound );
+
+		if( foundIdx )
+		{
+			DZRCOBS_ASSERT( keySizeFound > 0 );
+			DZRCOBS_ASSERT( keySizeFound <= aSrcBufSize );
+
+			if( !aCtx->isPreviousCodeDictionary )
+			{
+				aCtx->isPreviousCodeDictionary = true;
+
+				DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
+
+				aCtx->crc = DZRCOBS_CRC( aCtx->crc, curCode );
+				*curDst++ = curCode;
+				curCode		= 1;
+			}
+
+			DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
+
+			foundIdx -= 1; // remove base index
+			const uint8_t dictEntry = DZRCOBS_DICTIONARY_BITMASK | foundIdx;
+			aCtx->crc								= DZRCOBS_CRC( aCtx->crc, dictEntry );
+			*curDst++								= dictEntry;
+
+			// advance keyword
+			aSrcBufSize -= keySizeFound;
+			aSrcBuf += keySizeFound;
+
+			continue;
+		}
+
+		aCtx->isPreviousCodeDictionary = false;
+
+		// Continue with regular plain encoding
+		aSrcBufSize--;
+
+		const uint8_t byte = *aSrcBuf++;
+
+		if( byte == 0 )
+		{
+			DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
+
+			aCtx->crc = DZRCOBS_CRC( aCtx->crc, curCode );
+
+			*curDst++ = curCode;
+			curCode		= 1;
+		}
+		else
+		{
+			DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
+
+			aCtx->crc = DZRCOBS_CRC( aCtx->crc, byte );
+			*curDst++ = byte;
+			curCode++;
+
+			if( curCode == DZRCOBS_CODE_JUMP )
+			{
+				DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
+
+				aCtx->crc = DZRCOBS_CRC( aCtx->crc, curCode );
+				*curDst++ = curCode;
+				curCode		= 1;
+			}
+		}
+	}
+
+	aCtx->code		= curCode;
+	aCtx->pCurDst = curDst;
+
+	return DZRCOBS_RET_SUCCESS;
+}
+#endif
 
 // EOF
 // /////////////////////////////////////////////////////////////////////////////

@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <dzrcobs/dzrcobs.h>
 #include <dzrcobs/dzrcobs_decode.h>
 
@@ -34,6 +35,20 @@
 
 // Setup
 // /////////////////////////////////////////////////////////////////////////////
+
+// clang-format off
+// NOLINTBEGIN
+/// Dictionary string, descendent order, null terminated
+static const char s_TEST_Dictionary1[] =
+	DICT_ADD_WORD(2, "\x01\x01")
+	DICT_ADD_WORD(3, "\x02\x00\x02")
+	DICT_ADD_WORD(4, "\x03\x00\x00\x03")
+	DICT_ADD_WORD(5, "\x04\x00\x00\x00\x04")
+;
+// NOLINTEND
+// clang-format on
+
+const size_t s_TEST_Dictionary1_size = sizeof( s_TEST_Dictionary1 );
 
 // clang-format off
 // NOLINTBEGIN
@@ -72,6 +87,14 @@ static uint8_t s_dzrcobs_datatest_plainencoding[] = {
 	// 4
 	7, 'A', 0x00, 0x00, 0x00, 'B', 'C', 'D',
 	8 + DZRCOBS_FRAME_HEADER_SIZE, 'A', 0x02, 0x01, 0x01, 'B', 'C', 'D', 0x04, 0xFC /*Encoding*/, 0xAC /*CRC8*/,	// encoded
+};
+
+#define TEST_USERBITS (0x3F)
+
+static uint8_t s_dzrcobs_datatest_dictionary[] = {
+	// 1
+	2, 0x01, 0x01,				// decoded
+	2 + DZRCOBS_FRAME_HEADER_SIZE, 0x01, 0x80 + 0, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0xA2 /*CRC8*/,	// encoded
 };
 
 // NOLINTEND
@@ -178,6 +201,66 @@ TEST( DZRCOBS, EncodeManual )
 																		DZRCOBS_PLAIN,
 																		buffer + UTEST_GUARD_SIZE,
 																		encodedDataSize // Used to test the limit
+		);
+		CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
+
+		ret = dzrcobs_encode_inc( &ctx, decodeData, decodeDataSize );
+		CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
+
+		ret = dzrcobs_encode_inc_end( &ctx, &encodedLen );
+		CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
+
+		CHECK_EQUAL( encodedDataSize, encodedLen );
+		CHECK_EQUAL( 0, memcmp( encodedData, buffer + UTEST_GUARD_SIZE, encodedDataSize ) );
+
+		CHECK_EQUAL( 0, memcmp( buffer, &guard, UTEST_GUARD_SIZE ) );
+		CHECK_EQUAL( 0, memcmp( buffer + UTEST_GUARD_SIZE + encodedDataSize, &guard, UTEST_GUARD_SIZE ) );
+	}
+}
+
+// NOLINTBEGIN
+TEST( DZRCOBS, EncodeDictionaryManual )
+// NOLINTEND
+{
+	size_t idx									 = 0;
+	const uint8_t *pDatatest		 = s_dzrcobs_datatest_dictionary;
+	const uint8_t *pDatatest_end = s_dzrcobs_datatest_dictionary + sizeof( s_dzrcobs_datatest_dictionary );
+
+	sDICT_ctx m_dictCtx;
+
+	eDICT_ret ret = DZRCOBS_Dictionary_Init( &m_dictCtx, s_TEST_Dictionary1, s_TEST_Dictionary1_size );
+	CHECK_EQUAL( DICT_RET_SUCCESS, ret );
+
+	sDZRCOBS_ctx ctx;
+	memset( &ctx, 0, sizeof( sDZRCOBS_ctx ) );
+
+	dzrcobs_encode_set_dictionary( &ctx, &m_dictCtx, DZRCOBS_USING_DICT_1 );
+	ctx.user6bits = TEST_USERBITS;
+
+	while( pDatatest < pDatatest_end )
+	{
+		const uint8_t decodeDataSize = *pDatatest++;
+		const uint8_t *decodeData		 = pDatatest;
+		pDatatest += decodeDataSize;
+
+		const uint8_t encodedDataSize = *pDatatest++;
+		const uint8_t *encodedData		= pDatatest;
+		pDatatest += encodedDataSize;
+
+		static const uint32_t guard = ( UTEST_GUARD_BYTE << 24 ) | ( UTEST_GUARD_BYTE << 16 ) | ( UTEST_GUARD_BYTE << 8 ) |
+																	( UTEST_GUARD_BYTE << 0 );
+
+		memset( buffer, UTEST_GUARD_BYTE, UTEST_ENCODED_DECODED_DATA_MAX_SIZE + UTEST_GUARD_SIZE * 2 );
+
+		CHECK_TRUE( encodedDataSize <= DZRCOBS_MAX_ENCODED_SIZE( decodeDataSize ) + DZRCOBS_FRAME_HEADER_SIZE );
+
+		eDZRCOBS_ret ret	= DZRCOBS_RET_SUCCESS;
+		size_t encodedLen = 0;
+
+		ret = dzrcobs_encode_inc_begin( &ctx,
+																		DZRCOBS_USING_DICT_1,
+																		buffer + UTEST_GUARD_SIZE,
+																		DZRCOBS_MAX_ENCODED_SIZE( decodeDataSize ) + DZRCOBS_FRAME_HEADER_SIZE // Used to test the limit
 		);
 		CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
 

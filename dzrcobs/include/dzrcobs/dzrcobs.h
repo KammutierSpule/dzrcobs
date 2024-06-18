@@ -75,6 +75,7 @@ struct s_DZRCOB_ctx
 
 	uint8_t crc;
 	uint8_t user6bits; ///< user application 6 bits, cannot be 0, so must be 1..63, right aligned
+	bool isPreviousCodeDictionary;
 
 #ifdef ASAP_IS_DEBUG_BUILD
 	size_t writeCounter; ///< Current destiny counter, for debug
@@ -87,6 +88,8 @@ struct s_DZRCOB_ctx
 #define DZRCOBS_MAX_ENCODED_SIZE( size ) ( ( size ) + DZRCOBS_MAX_OVERHEAD( ( size ) ) + ( ( size ) == 0 ) )
 
 #define DZRCOBS_CRC_VALUE_WHEN_CRC_IS_ZERO (0xFF)
+
+#define DZRCOBS_DICTIONARY_BITMASK (0x80)
 
 // Declarations
 // /////////////////////////////////////////////////////////////////////////////
