@@ -77,6 +77,10 @@ struct s_DZRCOB_ctx
 	uint8_t user6bits; ///< user application 6 bits, cannot be 0, so must be 1..63, right aligned
 	bool isPreviousCodeDictionary;
 
+#if DZRCOBS_USE_DICT == 1
+	bool isFirstByteInTheBuffer;
+#endif
+
 #ifdef ASAP_IS_DEBUG_BUILD
 	size_t writeCounter; ///< Current destiny counter, for debug
 #endif

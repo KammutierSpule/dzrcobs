@@ -75,6 +75,10 @@ eDZRCOBS_ret dzrcobs_encode_inc_begin( sDZRCOBS_ctx *aCtx,
 
 	aCtx->isPreviousCodeDictionary = false;
 
+#if DZRCOBS_USE_DICT == 1
+	aCtx->isFirstByteInTheBuffer = true;
+#endif
+
 	DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter = 0 );
 
 	switch( aEncoding )
@@ -109,8 +113,6 @@ eDZRCOBS_ret dzrcobs_encode_inc_end( sDZRCOBS_ctx *aCtx, size_t *aOutSizeEncoded
 	{
 		return DZRCOBS_RET_ERR_OVERFLOW;
 	}
-
-	
 
 	if( !aCtx->isPreviousCodeDictionary )
 	{
@@ -251,19 +253,27 @@ eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *a
 			{
 				aCtx->isPreviousCodeDictionary = true;
 
-				DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
+				if( !aCtx->isFirstByteInTheBuffer )
+				{
+					aCtx->isFirstByteInTheBuffer = false;
 
-				aCtx->crc = DZRCOBS_CRC( aCtx->crc, curCode );
-				*curDst++ = curCode;
-				curCode		= 1;
+					DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
+
+					aCtx->crc = DZRCOBS_CRC( aCtx->crc, curCode );
+					*curDst++ = curCode;
+					curCode		= 1;
+				}
 			}
 
 			DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
 
 			foundIdx -= 1; // remove base index
 			const uint8_t dictEntry = DZRCOBS_DICTIONARY_BITMASK | foundIdx;
-			aCtx->crc								= DZRCOBS_CRC( aCtx->crc, dictEntry );
-			*curDst++								= dictEntry;
+
+			aCtx->crc										 = DZRCOBS_CRC( aCtx->crc, dictEntry );
+			aCtx->isFirstByteInTheBuffer = false;
+
+			*curDst++ = dictEntry;
 
 			// advance keyword
 			aSrcBufSize -= keySizeFound;
@@ -283,7 +293,8 @@ eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *a
 		{
 			DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
 
-			aCtx->crc = DZRCOBS_CRC( aCtx->crc, curCode );
+			aCtx->crc										 = DZRCOBS_CRC( aCtx->crc, curCode );
+			aCtx->isFirstByteInTheBuffer = false;
 
 			*curDst++ = curCode;
 			curCode		= 1;
@@ -292,7 +303,9 @@ eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *a
 		{
 			DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
 
-			aCtx->crc = DZRCOBS_CRC( aCtx->crc, byte );
+			aCtx->crc										 = DZRCOBS_CRC( aCtx->crc, byte );
+			aCtx->isFirstByteInTheBuffer = false;
+
 			*curDst++ = byte;
 			curCode++;
 
@@ -300,7 +313,9 @@ eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *a
 			{
 				DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
 
-				aCtx->crc = DZRCOBS_CRC( aCtx->crc, curCode );
+				aCtx->crc										 = DZRCOBS_CRC( aCtx->crc, curCode );
+				aCtx->isFirstByteInTheBuffer = false;
+
 				*curDst++ = curCode;
 				curCode		= 1;
 			}

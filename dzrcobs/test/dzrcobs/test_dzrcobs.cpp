@@ -94,7 +94,10 @@ static uint8_t s_dzrcobs_datatest_plainencoding[] = {
 static uint8_t s_dzrcobs_datatest_dictionary[] = {
 	// 1
 	2, 0x01, 0x01,				// decoded
-	2 + DZRCOBS_FRAME_HEADER_SIZE, 0x01, 0x80 + 0, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0xA2 /*CRC8*/,	// encoded
+	1 + DZRCOBS_FRAME_HEADER_SIZE, 0x80 + 0, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0x94 /*CRC8*/,	// encoded
+	// 2
+	4, 0x01, 0x01, 0x01, 0x01,				// decoded
+	2 + DZRCOBS_FRAME_HEADER_SIZE, 0x80 + 0, 0x80 + 0, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0x44 /*CRC8*/,	// encoded
 };
 
 // NOLINTEND
@@ -257,10 +260,11 @@ TEST( DZRCOBS, EncodeDictionaryManual )
 		eDZRCOBS_ret ret	= DZRCOBS_RET_SUCCESS;
 		size_t encodedLen = 0;
 
-		ret = dzrcobs_encode_inc_begin( &ctx,
-																		DZRCOBS_USING_DICT_1,
-																		buffer + UTEST_GUARD_SIZE,
-																		DZRCOBS_MAX_ENCODED_SIZE( decodeDataSize ) + DZRCOBS_FRAME_HEADER_SIZE // Used to test the limit
+		ret = dzrcobs_encode_inc_begin(
+		 &ctx,
+		 DZRCOBS_USING_DICT_1,
+		 buffer + UTEST_GUARD_SIZE,
+		 DZRCOBS_MAX_ENCODED_SIZE( decodeDataSize ) + DZRCOBS_FRAME_HEADER_SIZE // Used to test the limit
 		);
 		CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
 
