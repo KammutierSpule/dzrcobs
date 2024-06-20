@@ -60,6 +60,8 @@ typedef struct s_DICT_wordentry
 typedef struct s_DICT_ctx
 {
 	sDICT_wordentry wordSizeTable[DICT_MAX_DIFFERENTWORDSIZES];
+	uint8_t minWordSize;
+	uint8_t maxWordSize;
 } sDICT_ctx;
 
 typedef enum e_DICT_ret
