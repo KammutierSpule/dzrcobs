@@ -40,9 +40,9 @@ typedef enum e_DICTVALID_ret
 	DICT_INVALID_NOT_SORTED,
 	DICT_INVALID_OUTOFBOUNDS,
 	DICT_INVALID_WORDCOUNTING,
-  DICT_INVALID_WORDSIZE,
-  DICT_INVALID_EARLIER_END,
-  DICT_INVALID_NUMBER_OF_WORDSIZES,
+	DICT_INVALID_WORDSIZE,
+	DICT_INVALID_EARLIER_END,
+	DICT_INVALID_NUMBER_OF_WORDSIZES,
 } eDICTVALID_ret;
 
 #define DICT_MAX_DIFFERENTWORDSIZES ( 4 )
@@ -50,10 +50,10 @@ typedef enum e_DICTVALID_ret
 /// Dictionary entry for different word sizes
 typedef struct s_DICT_wordentry
 {
-	const uint8_t *dictionaryBegin; ///< Origin pointer to the dictionary entry
+	const uint8_t *dictionaryBegin; ///< Origin pointer to the dictionary entry. The first byte is the size (+'0')
 	uint8_t nEntries;								///< Number of entries
 	uint8_t lastIndex;							///< Number of entries -1
-	uint8_t globalIndex;						///< Start index for this dictionary entry on the global dictionary
+	uint8_t globalIndex;						///< Start index for this dictionary entry on the global dictionary. Starts at 1.
 	uint8_t strideSize;							///< word size + 1, that is the size of each word entry
 } sDICT_wordentry;
 
@@ -108,12 +108,22 @@ eDICT_ret DZRCOBS_Dictionary_Init( sDICT_ctx *aCtx, const char *aDictionary, siz
  * @param aSearchKey The key buffer data
  * @param aSearchKeySize The key buffer size
  * @param aOutKeySizeFound The output with the key size found (2..5)
- * @return uint8_t 0 not found, 1..126 index of the key found
+ * @return uint8_t 0 not found, 1..126 index of the key found (1 index based)
  */
 uint8_t DZRCOBS_Dictionary_Search( const sDICT_ctx *aCtx,
 																	 const uint8_t *aSearchKey,
 																	 size_t aSearchKeySize,
 																	 size_t *aOutKeySizeFound );
+
+/**
+ * @brief Gets a word pointer and size, based on aIndex
+ *
+ * @param aCtx The context to be used
+ * @param aIndex 0..125 index (0 index based)
+ * @param aOutWordSize pointer to store the size in bytes of the word
+ * @return uint8_t* A pointer to the word, NULL if invalid aIndex is givin
+ */
+const uint8_t *DZRCOBS_Dictionary_Get( const sDICT_ctx *aCtx, uint8_t aIndex, uint8_t *aOutWordSize );
 
 // External declaration of default dictionary
 extern const char G_DZRCOBS_DefaultDictionary[];

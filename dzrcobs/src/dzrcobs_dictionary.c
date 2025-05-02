@@ -241,9 +241,14 @@ uint8_t DZRCOBS_Dictionary_Search( const sDICT_ctx *aCtx,
 	DZRCOBS_ASSERT( ( aCtx->wordSizeTable[2].strideSize == ( 4 + 1 ) ) || ( aCtx->wordSizeTable[2].nEntries == 0 ) );
 	DZRCOBS_ASSERT( ( aCtx->wordSizeTable[3].strideSize == ( 5 + 1 ) ) || ( aCtx->wordSizeTable[3].nEntries == 0 ) );
 
-	if( ( aSearchKeySize < aCtx->minWordSize ) || ( aSearchKeySize > aCtx->maxWordSize ) )
+	if( aSearchKeySize < aCtx->minWordSize )
 	{
 		return 0;
+	}
+
+	if( aSearchKeySize > aCtx->maxWordSize )
+	{
+		aSearchKeySize = aCtx->maxWordSize;
 	}
 
 	const size_t compareKeySize = aSearchKeySize + 1; // this is just to fake a dummy header byte
@@ -266,6 +271,33 @@ uint8_t DZRCOBS_Dictionary_Search( const sDICT_ctx *aCtx,
 	}
 
 	return 0;
+}
+
+const uint8_t *DZRCOBS_Dictionary_Get( const sDICT_ctx *aCtx, uint8_t aIndex, uint8_t *aOutWordSize )
+{
+	DZRCOBS_ASSERT( aCtx != NULL );
+	DZRCOBS_ASSERT( aIndex < 126 );
+	DZRCOBS_ASSERT( aOutWordSize != NULL );
+
+	aIndex++; // convert to start as a 1 index (for easy comparison)
+
+	for( uint8_t i = 0; i < DICT_MAX_DIFFERENTWORDSIZES; i++ )
+	{
+		const sDICT_wordentry *wordEntry = &aCtx->wordSizeTable[i];
+
+		if( ( wordEntry->nEntries > 0 ) && ( ( wordEntry->globalIndex + wordEntry->lastIndex ) >= aIndex ) )
+		{
+			*aOutWordSize = wordEntry->strideSize - 1;
+
+			const size_t wordZeroIdx = aIndex - wordEntry->globalIndex;
+
+			return wordEntry->dictionaryBegin +						 // entry base +
+						 ( wordZeroIdx * wordEntry->strideSize ) // index * stride +
+						 + 1;																		 // +1 to skip the word size
+		}
+	}
+
+	return NULL;
 }
 
 // EOF
