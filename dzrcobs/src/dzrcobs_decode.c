@@ -20,6 +20,7 @@
 #include <stdbool.h>
 #include "crc8.h"
 #include "dzrcobs/dzrcobs.h"
+#include "dzrcobs_assert.h"
 
 // Definitions
 // /////////////////////////////////////////////////////////////////////////////
@@ -33,7 +34,7 @@ eDZRCOBS_ret dzrcobs_decode( const sDZRCOBS_decodectx *aDecodeCtx,
 														 uint8_t *aOutUser6bitDataRightAlgn )
 {
 	if( ( !aDecodeCtx ) || ( !aDecodeCtx->srcBufEncoded ) || ( !aDecodeCtx->dstBufDecoded ) || ( !aOutDecodedLen ) ||
-			( !aOutDecodedStartPos ) || ( aDecodeCtx->dstBufDecodedSize == 0 ) || ( aDecodeCtx->srcBufEncodedLen < 4 ) )
+			( !aOutDecodedStartPos ) || ( aDecodeCtx->dstBufDecodedSize == 0 ) || ( aDecodeCtx->srcBufEncodedLen < 3 ) )
 	{
 		return DZRCOBS_RET_ERR_BAD_ARG;
 	}
@@ -49,6 +50,8 @@ eDZRCOBS_ret dzrcobs_decode( const sDZRCOBS_decodectx *aDecodeCtx,
 	size_t totalWrite = 0;
 	size_t totalRead	= 0;
 #endif
+
+	DZRCOBS_RUN_ONDEBUG( totalRead++ );
 
 	const uint8_t receivedCRC8 = *pReadEncoded--;
 
@@ -73,6 +76,8 @@ eDZRCOBS_ret dzrcobs_decode( const sDZRCOBS_decodectx *aDecodeCtx,
 		return DZRCOBS_RET_ERR_CRC;
 	}
 
+	DZRCOBS_RUN_ONDEBUG( totalRead++ );
+
 	const uint8_t receivedUserEncoding = *pReadEncoded--;
 
 	if( receivedUserEncoding == 0 )
@@ -80,12 +85,32 @@ eDZRCOBS_ret dzrcobs_decode( const sDZRCOBS_decodectx *aDecodeCtx,
 		return DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD;
 	}
 
+	// Get and validate encoding type
 	const eDZRCOBS_encoding encoding = (eDZRCOBS_encoding)( receivedUserEncoding & 0x03 );
+	const sDICT_ctx *pDict					 = NULL;
 
-	if( encoding == DZRCOBS_RESERVED )
+	switch( encoding )
 	{
+	case DZRCOBS_PLAIN:
+		break;
+
+	case DZRCOBS_USING_DICT_1:
+	case DZRCOBS_USING_DICT_2:
+		pDict = aDecodeCtx->pDict[encoding - DZRCOBS_USING_DICT_1];
+		if( pDict == NULL )
+		{
+			return DZRCOBS_RET_ERR_NO_DICTIONARY_TO_DECODE;
+		}
+
+		break;
+
+	case DZRCOBS_RESERVED:
+	default:
 		return DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD;
+		break;
 	}
+
+	bool is_previous_a_code_dictionary = false;
 
 	while( pReadEncoded >= pBeginEncoded )
 	{
@@ -96,17 +121,57 @@ eDZRCOBS_ret dzrcobs_decode( const sDZRCOBS_decodectx *aDecodeCtx,
 			return DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD;
 		}
 
-		if( ( code != DZRCOBS_CODE_JUMP ) &&					// Only adds if the new code is not skipping
-				( pWriteDecoded != pWriteDecodedInitial ) // Only adds if this is not the first run
-		)
+		const bool is_dictionary_code = ( code & DZRCOBS_DICTIONARY_BITMASK ) != 0;
+
+		if( is_dictionary_code )
+		{
+			is_previous_a_code_dictionary = true;
+
+			const uint8_t dictIdx = ( code & ~DZRCOBS_DICTIONARY_BITMASK );
+
+			uint8_t wordSize = 0;
+
+			const uint8_t *word = DZRCOBS_Dictionary_Get( pDict, dictIdx, &wordSize );
+
+			if( word == NULL )
+			{
+				return DZRCOBS_RET_ERR_WORD_NOT_FOUND_ON_DICTIONARY;
+			}
+
+			if( ( pWriteDecoded - wordSize ) < pBeginDecoded )
+			{
+				return DZRCOBS_RET_ERR_OVERFLOW;
+			}
+
+			const uint8_t *wordEnd = word + wordSize;
+			wordEnd--;
+
+			while( wordSize )
+			{
+				wordSize--;
+				DZRCOBS_RUN_ONDEBUG( totalWrite++ );
+
+				pWriteDecoded--;
+				*pWriteDecoded = *wordEnd--;
+			}
+
+			DZRCOBS_RUN_ONDEBUG( totalRead++ );
+			pReadEncoded--;
+			continue; // go to start of while loop and get another code
+		}
+
+		if( ( ( code != DZRCOBS_CODE_JUMP ) &&						 // Only adds if the new code is not skipping
+					( pWriteDecoded != pWriteDecodedInitial ) && // Only adds if this is not the first run
+					( !is_previous_a_code_dictionary ) ) ||
+				( ( code == 1 ) && is_previous_a_code_dictionary ) )
 		{
 			pWriteDecoded--;
 			*pWriteDecoded = 0;
 
-#ifdef ASAP_IS_DEBUG_BUILD
-			totalWrite++;
-#endif
+			DZRCOBS_RUN_ONDEBUG( totalWrite++ );
 		}
+
+		is_previous_a_code_dictionary = false;
 
 		code--;
 		if( ( pWriteDecoded - code ) < pBeginDecoded )
@@ -116,9 +181,7 @@ eDZRCOBS_ret dzrcobs_decode( const sDZRCOBS_decodectx *aDecodeCtx,
 
 		pReadEncoded--;
 
-#ifdef ASAP_IS_DEBUG_BUILD
-		totalRead++;
-#endif
+		DZRCOBS_RUN_ONDEBUG( totalRead++ );
 
 		while( code )
 		{
@@ -126,9 +189,7 @@ eDZRCOBS_ret dzrcobs_decode( const sDZRCOBS_decodectx *aDecodeCtx,
 
 			const uint8_t byte = *pReadEncoded--;
 
-#ifdef ASAP_IS_DEBUG_BUILD
-			totalRead++;
-#endif
+			DZRCOBS_RUN_ONDEBUG( totalRead++ );
 
 			if( byte == 0 )
 			{
@@ -138,9 +199,7 @@ eDZRCOBS_ret dzrcobs_decode( const sDZRCOBS_decodectx *aDecodeCtx,
 			pWriteDecoded--;
 			*pWriteDecoded = byte;
 
-#ifdef ASAP_IS_DEBUG_BUILD
-			totalWrite++;
-#endif
+			DZRCOBS_RUN_ONDEBUG( totalWrite++ );
 		}
 	}
 

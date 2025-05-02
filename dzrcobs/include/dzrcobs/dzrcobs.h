@@ -43,7 +43,9 @@ typedef enum e_DZRCOBS_ret
 	DZRCOBS_RET_ERR_OVERFLOW,
 	DZRCOBS_RET_ERR_NOTINITIALIZED,
 	DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD,
-	DZRCOBS_RET_ERR_CRC
+	DZRCOBS_RET_ERR_CRC,
+	DZRCOBS_RET_ERR_NO_DICTIONARY_TO_DECODE,
+	DZRCOBS_RET_ERR_WORD_NOT_FOUND_ON_DICTIONARY,
 } eDZRCOBS_ret;
 
 typedef enum e_DZRCOBS_encoding
@@ -75,7 +77,7 @@ struct s_DZRCOB_ctx
 
 	uint8_t crc;
 	uint8_t user6bits; ///< user application 6 bits, cannot be 0, so must be 1..63, right aligned
-	bool isPreviousCodeDictionary;
+	bool isPreviousCodeDictionaryOrZero;
 
 #if DZRCOBS_USE_DICT == 1
 	bool isFirstByteInTheBuffer;

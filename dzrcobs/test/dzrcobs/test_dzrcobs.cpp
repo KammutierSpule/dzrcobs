@@ -98,6 +98,18 @@ static uint8_t s_dzrcobs_datatest_dictionary[] = {
 	// 2
 	4, 0x01, 0x01, 0x01, 0x01,				// decoded
 	2 + DZRCOBS_FRAME_HEADER_SIZE, 0x80 + 0, 0x80 + 0, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0x44 /*CRC8*/,	// encoded
+	// 3
+	5, 0x12, 0x01, 0x01, 0x01, 0x01,				// decoded
+	4 + DZRCOBS_FRAME_HEADER_SIZE, 0x12, 0x02, 0x80 + 0, 0x80 + 0, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0xB2 /*CRC8*/,	// encoded
+	// 4
+	6, 0x12, 0x01, 0x01, 0x23, 0x01, 0x01,				// decoded
+	6 + DZRCOBS_FRAME_HEADER_SIZE, 0x12, 0x02, 0x80 + 0, 0x23, 0x02, 0x80 + 0, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0x9A /*CRC8*/,	// encoded
+	// 5
+	7, 0x12, 0x01, 0x01, 0x23, 0x02, 0x00, 0x02,				// decoded
+	6 + DZRCOBS_FRAME_HEADER_SIZE, 0x12, 0x02, 0x80 + 0, 0x23, 0x02, 0x80 + 1, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0xE2 /*CRC8*/,	// encoded
+	// 6
+	7, 0x12, 0x01, 0x01, 0x00, 0x02, 0x00, 0x02,				// decoded
+	5 + DZRCOBS_FRAME_HEADER_SIZE, 0x12, 0x02, 0x80 + 0, 0x01, 0x80 + 1, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0x9E /*CRC8*/,	// encoded
 };
 
 // NOLINTEND
@@ -218,6 +230,7 @@ TEST( DZRCOBS, EncodeManual )
 
 		CHECK_EQUAL( 0, memcmp( buffer, &guard, UTEST_GUARD_SIZE ) );
 		CHECK_EQUAL( 0, memcmp( buffer + UTEST_GUARD_SIZE + encodedDataSize, &guard, UTEST_GUARD_SIZE ) );
+		idx++;
 	}
 }
 
@@ -279,6 +292,62 @@ TEST( DZRCOBS, EncodeDictionaryManual )
 
 		CHECK_EQUAL( 0, memcmp( buffer, &guard, UTEST_GUARD_SIZE ) );
 		CHECK_EQUAL( 0, memcmp( buffer + UTEST_GUARD_SIZE + encodedDataSize, &guard, UTEST_GUARD_SIZE ) );
+		idx++;
+	}
+}
+
+// NOLINTBEGIN
+TEST( DZRCOBS, DecodedictionaryManual )
+// NOLINTEND
+{
+	sDICT_ctx m_dictCtx;
+
+	eDICT_ret ret = DZRCOBS_Dictionary_Init( &m_dictCtx, s_TEST_Dictionary1, s_TEST_Dictionary1_size );
+	CHECK_EQUAL( DICT_RET_SUCCESS, ret );
+
+	size_t idx									 = 0;
+	const uint8_t *pDatatest		 = s_dzrcobs_datatest_dictionary;
+	const uint8_t *pDatatest_end = s_dzrcobs_datatest_dictionary + sizeof( s_dzrcobs_datatest_dictionary );
+
+	while( pDatatest < pDatatest_end )
+	{
+		const uint8_t decodeDataSize = *pDatatest++;
+		const uint8_t *decodeData		 = pDatatest;
+		pDatatest += decodeDataSize;
+
+		const uint8_t encodedDataSize = *pDatatest++;
+		const uint8_t *encodedData		= pDatatest;
+		pDatatest += encodedDataSize;
+
+		eDZRCOBS_ret ret		= DZRCOBS_RET_SUCCESS;
+		size_t decodedLen		= 0;
+		uint8_t *decodedPos = nullptr;
+
+		static const uint32_t guard = ( UTEST_GUARD_BYTE << 24 ) | ( UTEST_GUARD_BYTE << 16 ) | ( UTEST_GUARD_BYTE << 8 ) |
+																	( UTEST_GUARD_BYTE << 0 );
+
+		memset( buffer, UTEST_GUARD_BYTE, UTEST_ENCODED_DECODED_DATA_MAX_SIZE + UTEST_GUARD_SIZE * 2 );
+
+		sDZRCOBS_decodectx decodeCtx;
+		decodeCtx.srcBufEncoded			= encodedData;
+		decodeCtx.srcBufEncodedLen	= encodedDataSize;
+		decodeCtx.dstBufDecoded			= buffer + UTEST_GUARD_SIZE;
+		decodeCtx.dstBufDecodedSize = decodeDataSize; // used to test limit of the buffer
+		decodeCtx.pDict[0] = &m_dictCtx;
+
+		uint8_t user6bitDataRightAlgn = 0;
+
+		ret = dzrcobs_decode( &decodeCtx, &decodedLen, &decodedPos, &user6bitDataRightAlgn );
+
+		CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
+		CHECK_EQUAL( 0x3F, user6bitDataRightAlgn );
+		CHECK_EQUAL( 0, memcmp( buffer, &guard, UTEST_GUARD_SIZE ) );
+		CHECK_EQUAL( 0,
+								 memcmp( buffer + UTEST_GUARD_SIZE + UTEST_ENCODED_DECODED_DATA_MAX_SIZE, &guard, UTEST_GUARD_SIZE ) );
+		CHECK_EQUAL( decodeDataSize, decodedLen );
+		CHECK_EQUAL( decodedPos, ( buffer + UTEST_GUARD_SIZE ) );
+		CHECK_EQUAL( 0, memcmp( decodeData, decodedPos, decodedLen ) );
+		idx++;
 	}
 }
 

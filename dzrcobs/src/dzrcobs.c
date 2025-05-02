@@ -73,7 +73,7 @@ eDZRCOBS_ret dzrcobs_encode_inc_begin( sDZRCOBS_ctx *aCtx,
 	aCtx->crc			 = DZRCOBS_CRC_INIT_VAL;
 	aCtx->encoding = aEncoding;
 
-	aCtx->isPreviousCodeDictionary = false;
+	aCtx->isPreviousCodeDictionaryOrZero = false;
 
 #if DZRCOBS_USE_DICT == 1
 	aCtx->isFirstByteInTheBuffer = true;
@@ -114,7 +114,7 @@ eDZRCOBS_ret dzrcobs_encode_inc_end( sDZRCOBS_ctx *aCtx, size_t *aOutSizeEncoded
 		return DZRCOBS_RET_ERR_OVERFLOW;
 	}
 
-	if( !aCtx->isPreviousCodeDictionary )
+	if( !aCtx->isPreviousCodeDictionaryOrZero )
 	{
 		DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
 
@@ -249,14 +249,12 @@ eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *a
 			DZRCOBS_ASSERT( keySizeFound > 0 );
 			DZRCOBS_ASSERT( keySizeFound <= aSrcBufSize );
 
-			if( !aCtx->isPreviousCodeDictionary )
+			if( !aCtx->isPreviousCodeDictionaryOrZero )
 			{
-				aCtx->isPreviousCodeDictionary = true;
+				aCtx->isPreviousCodeDictionaryOrZero = true;
 
 				if( !aCtx->isFirstByteInTheBuffer )
 				{
-					aCtx->isFirstByteInTheBuffer = false;
-
 					DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
 
 					aCtx->crc = DZRCOBS_CRC( aCtx->crc, curCode );
@@ -282,8 +280,6 @@ eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *a
 			continue;
 		}
 
-		aCtx->isPreviousCodeDictionary = false;
-
 		// Continue with regular plain encoding
 		aSrcBufSize--;
 
@@ -293,8 +289,10 @@ eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *a
 		{
 			DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
 
-			aCtx->crc										 = DZRCOBS_CRC( aCtx->crc, curCode );
-			aCtx->isFirstByteInTheBuffer = false;
+			aCtx->crc = DZRCOBS_CRC( aCtx->crc, curCode );
+
+			aCtx->isFirstByteInTheBuffer				 = false;
+			aCtx->isPreviousCodeDictionaryOrZero = true;
 
 			*curDst++ = curCode;
 			curCode		= 1;
@@ -303,8 +301,9 @@ eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *a
 		{
 			DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
 
-			aCtx->crc										 = DZRCOBS_CRC( aCtx->crc, byte );
-			aCtx->isFirstByteInTheBuffer = false;
+			aCtx->crc														 = DZRCOBS_CRC( aCtx->crc, byte );
+			aCtx->isFirstByteInTheBuffer				 = false;
+			aCtx->isPreviousCodeDictionaryOrZero = false;
 
 			*curDst++ = byte;
 			curCode++;
