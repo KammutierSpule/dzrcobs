@@ -24,7 +24,6 @@
 
 // Definitions
 // /////////////////////////////////////////////////////////////////////////////
-#define DZRCOBS_CODE_JUMP ( 0x7F )
 
 // Implementation
 // /////////////////////////////////////////////////////////////////////////////
@@ -160,6 +159,10 @@ eDZRCOBS_ret dzrcobs_decode( const sDZRCOBS_decodectx *aDecodeCtx,
 
 			if( ( encoding == DZRCOBS_PLAIN ) || ( code < DZRCOBS_DICTIONARY_BITMASK ) )
 			{
+				const bool is_end_of_code_a_zero = ( code & DZRCOBS_NEXTCODE_BITMASK ) == 0;
+
+				code &= DZRCOBS_CODE_JUMP;
+
 				if( code == 0 )
 				{
 					return DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD;
@@ -195,6 +198,18 @@ eDZRCOBS_ret dzrcobs_decode( const sDZRCOBS_decodectx *aDecodeCtx,
 						pWriteDecoded--;
 						*pWriteDecoded = byte;
 
+						DZRCOBS_RUN_ONDEBUG( totalWrite++ );
+					}
+
+					if( is_end_of_code_a_zero && ( pReadEncoded >= pBeginEncoded ) )
+					{
+						if( ( pWriteDecoded - 1 ) < pBeginDecoded )
+						{
+							return DZRCOBS_RET_ERR_OVERFLOW;
+						}
+
+						pWriteDecoded--;
+						*pWriteDecoded = 0;
 						DZRCOBS_RUN_ONDEBUG( totalWrite++ );
 					}
 				}

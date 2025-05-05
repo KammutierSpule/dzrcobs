@@ -24,8 +24,6 @@
 
 // Definitions
 // /////////////////////////////////////////////////////////////////////////////
-#define DZRCOBS_CODE_JUMP ( 0x3F )
-
 eDZRCOBS_ret dzrcobs_encode_inc_plain( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aSrcBufSize );
 eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aSrcBufSize );
 
