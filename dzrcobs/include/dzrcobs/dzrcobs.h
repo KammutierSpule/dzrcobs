@@ -18,12 +18,7 @@
 
 // Includes
 // /////////////////////////////////////////////////////////////////////////////
-#include <stddef.h>
-#include <stdint.h>
-
-#if DZRCOBS_USE_DICT == 1
 #include "dzrcobs_dictionary.h"
-#endif
 
 // clang-format off
 #ifdef __cplusplus
@@ -67,9 +62,7 @@ struct s_DZRCOB_ctx
 	uint8_t *pDstEnd; ///< Last position pointer, 1 position outside buffer range
 	uint8_t code;			///< Current code
 
-#if DZRCOBS_USE_DICT == 1
 	const sDICT_ctx *pDict[DZRCOBS_DICT_N];
-#endif
 
 	dzrcobs_encode_inc_funcPtr encFunc;
 
@@ -77,15 +70,12 @@ struct s_DZRCOB_ctx
 
 	uint8_t crc;
 	uint8_t user6bits; ///< user application 6 bits, cannot be 0, so must be 1..63, right aligned
-	bool isPreviousCodeDictionaryOrZero;
+	uint8_t previousCode;
+	uint8_t pendingMask;
 
-#if DZRCOBS_USE_DICT == 1
 	bool isFirstByteInTheBuffer;
-#endif
 
-#ifdef ASAP_IS_DEBUG_BUILD
 	size_t writeCounter; ///< Current destiny counter, for debug
-#endif
 };
 
 #define DZRCOBS_ONE_BYTE_OVERHEAD_EVERY ( 126 )
@@ -96,11 +86,13 @@ struct s_DZRCOB_ctx
 #define DZRCOBS_CRC_VALUE_WHEN_CRC_IS_ZERO (0xFF)
 
 #define DZRCOBS_DICTIONARY_BITMASK (0x80)
+#define DZRCOBS_NEXTCODE_BITMASK (0x40)
+#define DZRCOBS_NEXTCODE_IS_ZERO (0x00)
+#define DZRCOBS_NEXTCODE_IS_DICTIONARY (DZRCOBS_NEXTCODE_BITMASK)
 
 // Declarations
 // /////////////////////////////////////////////////////////////////////////////
 
-#if DZRCOBS_USE_DICT == 1
 /**
  * @brief Set the pointer to an existent created dictionary context
  *
@@ -112,7 +104,6 @@ struct s_DZRCOB_ctx
 eDZRCOBS_ret dzrcobs_encode_set_dictionary( sDZRCOBS_ctx *aCtx,
 																						const sDICT_ctx *aDictCtx,
 																						eDZRCOBS_encoding aDictEncoding );
-#endif
 
 /**
  * @brief Begin an incremental encoding of data

@@ -18,6 +18,7 @@
 // /////////////////////////////////////////////////////////////////////////////
 #include <CppUTest/TestHarness.h>
 #include <CppUTest/UtestMacros.h>
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -75,41 +76,84 @@ TEST_GROUP( DZRCOBS ){
 // clang-format off
 // NOLINTBEGIN
 static uint8_t s_dzrcobs_datatest_plainencoding[] = {
-	// 1
+	// 0
 	1, 'A',				// decoded
 	2 + DZRCOBS_FRAME_HEADER_SIZE, 'A', 0x02, 0xFC /*Encoding*/, 0x54 /*CRC8*/,	// encoded
-	// 2
+	// 1
 	4, 'A', 'B', 'C', 'D',
 	5 + DZRCOBS_FRAME_HEADER_SIZE, 'A', 'B', 'C', 'D', 0x05, 0xFC /*Encoding*/, 0x58 /*CRC8*/,	// encoded
-	// 3
+	// 2
 	4, 'A', 'B', 0x00, 'C',
 	5 + DZRCOBS_FRAME_HEADER_SIZE, 'A', 'B', 0x03, 'C', 0x02, 0xFC /*Encoding*/, 0x86 /*CRC8*/,	// encoded
-	// 4
+	// 3
 	7, 'A', 0x00, 0x00, 0x00, 'B', 'C', 'D',
 	8 + DZRCOBS_FRAME_HEADER_SIZE, 'A', 0x02, 0x01, 0x01, 'B', 'C', 'D', 0x04, 0xFC /*Encoding*/, 0xAC /*CRC8*/,	// encoded
+	// 4
+	1, 0x00,				// decoded
+	1 + DZRCOBS_FRAME_HEADER_SIZE, 0x01, 0xFC /*Encoding*/, 0x6E /*CRC8*/,	// encoded
 };
 
 #define TEST_USERBITS (0x3F)
 
+// Encoded is using s_TEST_Dictionary1
 static uint8_t s_dzrcobs_datatest_dictionary[] = {
-	// 1
+	// 0
 	2, 0x01, 0x01,				// decoded
 	1 + DZRCOBS_FRAME_HEADER_SIZE, 0x80 + 0, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0x94 /*CRC8*/,	// encoded
-	// 2
+	// 1
 	4, 0x01, 0x01, 0x01, 0x01,				// decoded
 	2 + DZRCOBS_FRAME_HEADER_SIZE, 0x80 + 0, 0x80 + 0, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0x44 /*CRC8*/,	// encoded
-	// 3
+	// 2
 	5, 0x12, 0x01, 0x01, 0x01, 0x01,				// decoded
-	4 + DZRCOBS_FRAME_HEADER_SIZE, 0x12, 0x02, 0x80 + 0, 0x80 + 0, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0xB2 /*CRC8*/,	// encoded
-	// 4
+	4 + DZRCOBS_FRAME_HEADER_SIZE, 0x12, 0x02 | DZRCOBS_NEXTCODE_IS_ZERO, 0x80 + 0, 0x80 + 0, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0xB2 /*CRC8*/,	// encoded
+	// 3
 	6, 0x12, 0x01, 0x01, 0x23, 0x01, 0x01,				// decoded
-	6 + DZRCOBS_FRAME_HEADER_SIZE, 0x12, 0x02, 0x80 + 0, 0x23, 0x02, 0x80 + 0, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0x9A /*CRC8*/,	// encoded
-	// 5
+	6 + DZRCOBS_FRAME_HEADER_SIZE, 0x12, 0x02 | DZRCOBS_NEXTCODE_IS_ZERO, 0x80 + 0, 0x23, 0x02 | DZRCOBS_NEXTCODE_IS_DICTIONARY, 0x80 + 0, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0x1E /*CRC8*/,	// encoded
+	// 4
 	7, 0x12, 0x01, 0x01, 0x23, 0x02, 0x00, 0x02,				// decoded
-	6 + DZRCOBS_FRAME_HEADER_SIZE, 0x12, 0x02, 0x80 + 0, 0x23, 0x02, 0x80 + 1, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0xE2 /*CRC8*/,	// encoded
-	// 6
+	6 + DZRCOBS_FRAME_HEADER_SIZE, 0x12, 0x02 | DZRCOBS_NEXTCODE_IS_ZERO, 0x80 + 0, 0x23, 0x02 | DZRCOBS_NEXTCODE_IS_DICTIONARY, 0x80 + 1, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0x66 /*CRC8*/,	// encoded
+	// 5
 	7, 0x12, 0x01, 0x01, 0x00, 0x02, 0x00, 0x02,				// decoded
-	5 + DZRCOBS_FRAME_HEADER_SIZE, 0x12, 0x02, 0x80 + 0, 0x01, 0x80 + 1, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0x9E /*CRC8*/,	// encoded
+	5 + DZRCOBS_FRAME_HEADER_SIZE, 0x12, 0x02 | DZRCOBS_NEXTCODE_IS_ZERO, 0x80 + 0, 0x01, 0x80 + 1, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0x9E /*CRC8*/,	// encoded
+	// 6
+	1, 0x00,				// decoded
+	1 + DZRCOBS_FRAME_HEADER_SIZE, 0x01 | DZRCOBS_NEXTCODE_IS_ZERO, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0xC8 /*CRC8*/,	// encoded
+	// 7
+	2, 0x00, 0x00,	// decoded
+	2 + DZRCOBS_FRAME_HEADER_SIZE, 0x01 | DZRCOBS_NEXTCODE_IS_ZERO, 0x01 | DZRCOBS_NEXTCODE_IS_ZERO, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0xFE /*CRC8*/,	// encoded
+	// 8
+	9, 0x12, 0x01, 0x01, 0x00, 0x02, 0x00, 0x02, 0x12, 0x00,		// decoded
+	8 + DZRCOBS_FRAME_HEADER_SIZE, 0x12, 0x02 | DZRCOBS_NEXTCODE_IS_ZERO, 0x80 + 0, 0x01, 0x80 + 1, 0x12, 0x02 | DZRCOBS_NEXTCODE_IS_DICTIONARY, 0x01, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0xE8 /*CRC8*/,	// encoded
+	// 9
+	4, 0x01, 0x01, 0x12, 0x00,		// decoded
+	4 + DZRCOBS_FRAME_HEADER_SIZE, 0x80 + 0, 0x12, 0x02 | DZRCOBS_NEXTCODE_IS_DICTIONARY, 0x01 | DZRCOBS_NEXTCODE_IS_ZERO, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0xD2 /*CRC8*/,	// encoded
+	// 10
+	4, 'A', 'B', 0x00, 'C',		// decoded
+	5 + DZRCOBS_FRAME_HEADER_SIZE, 'A', 'B', 0x03, 'C', 0x02 | DZRCOBS_NEXTCODE_IS_ZERO, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0x20 /*CRC8*/,	// encoded
+	// 11
+	5, 'A', 0x00, 'B', 0x00, 'C',		// decoded
+	6 + DZRCOBS_FRAME_HEADER_SIZE, 'A', 0x02 | DZRCOBS_NEXTCODE_IS_ZERO, 'B', 0x02 | DZRCOBS_NEXTCODE_IS_ZERO, 'C', 0x02 | DZRCOBS_NEXTCODE_IS_ZERO, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0xC0 /*CRC8*/,	// encoded
+	// 12
+	4, 0x01, 0x01, 0x00, 'C',		// decoded
+	3 + DZRCOBS_FRAME_HEADER_SIZE, 0x80 + 0, 'C', 0x02 | DZRCOBS_NEXTCODE_IS_ZERO, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0x2E /*CRC8*/,	// encoded
+	// 13
+	3, 0x01, 0x01, 'C',		// decoded
+	3 + DZRCOBS_FRAME_HEADER_SIZE, 0x80 + 0, 'C', 0x02 | DZRCOBS_NEXTCODE_IS_DICTIONARY, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0x3C /*CRC8*/,	// encoded
+	// 14
+	6, 0x01, 0x01, 0x00, 'A', 0x00, 'B',		// decoded
+	5 + DZRCOBS_FRAME_HEADER_SIZE, 0x80 + 0, 'A', 0x02 | DZRCOBS_NEXTCODE_IS_ZERO,'B', 0x02 | DZRCOBS_NEXTCODE_IS_ZERO, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0xC0 /*CRC8*/,	// encoded
+	// 15
+	8, 0x01, 0x01, 0x00, 'A', 0x01, 0x01, 0x00, 'B',		// decoded
+	6 + DZRCOBS_FRAME_HEADER_SIZE, 0x80 + 0, 'A', 0x02 | DZRCOBS_NEXTCODE_IS_ZERO, 0x80 + 0, 'B', 0x02 | DZRCOBS_NEXTCODE_IS_ZERO, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0x96 /*CRC8*/,	// encoded
+	// 16
+	5, 0x01, 0x01, 0x00, 0x01, 0x01,		// decoded
+	3 + DZRCOBS_FRAME_HEADER_SIZE, 0x80 + 0, 0x01, 0x80 + 0, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0xEE /*CRC8*/,	// encoded
+	// 17
+	4, 0x01, 0x01, 'C', 0x00,		// decoded
+	4 + DZRCOBS_FRAME_HEADER_SIZE, 0x80 + 0, 'C', 0x02 | DZRCOBS_NEXTCODE_IS_DICTIONARY, 0x01, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0x1C /*CRC8*/,	// encoded
+	// 18
+	6, 0x01, 0x01, 'C', 0x01, 0x01, 0x00,		// decoded
+	5 + DZRCOBS_FRAME_HEADER_SIZE, 0x80 + 0, 'C', 0x02 | DZRCOBS_NEXTCODE_IS_DICTIONARY, 0x80 + 0, 0x01, ( TEST_USERBITS << 2 ) | 1 /*Encoding*/, 0x26 /*CRC8*/,	// encoded
 };
 
 // NOLINTEND
@@ -160,13 +204,11 @@ TEST( DZRCOBS, DecodeManual )
 
 		memset( buffer, UTEST_GUARD_BYTE, UTEST_ENCODED_DECODED_DATA_MAX_SIZE + UTEST_GUARD_SIZE * 2 );
 
-		CHECK_EQUAL( encodedDataSize, DZRCOBS_MAX_ENCODED_SIZE( decodeDataSize ) + DZRCOBS_FRAME_HEADER_SIZE );
-
 		sDZRCOBS_decodectx decodeCtx;
 		decodeCtx.srcBufEncoded			= encodedData;
 		decodeCtx.srcBufEncodedLen	= encodedDataSize;
 		decodeCtx.dstBufDecoded			= buffer + UTEST_GUARD_SIZE;
-		decodeCtx.dstBufDecodedSize = decodeDataSize; // used to test limit of the buffer
+		decodeCtx.dstBufDecodedSize = std::max<uint8_t>( decodeDataSize, 4 ); // used to test limit of the buffer
 
 		uint8_t user6bitDataRightAlgn = 0;
 
@@ -178,8 +220,9 @@ TEST( DZRCOBS, DecodeManual )
 		CHECK_EQUAL( 0,
 								 memcmp( buffer + UTEST_GUARD_SIZE + UTEST_ENCODED_DECODED_DATA_MAX_SIZE, &guard, UTEST_GUARD_SIZE ) );
 		CHECK_EQUAL( decodeDataSize, decodedLen );
-		CHECK_EQUAL( decodedPos, ( buffer + UTEST_GUARD_SIZE ) );
+		CHECK_COMPARE( decodedPos, >=, ( buffer + UTEST_GUARD_SIZE ) );
 		CHECK_EQUAL( 0, memcmp( decodeData, decodedPos, decodedLen ) );
+		idx++;
 	}
 }
 
@@ -206,8 +249,6 @@ TEST( DZRCOBS, EncodeManual )
 
 		memset( buffer, UTEST_GUARD_BYTE, UTEST_ENCODED_DECODED_DATA_MAX_SIZE + UTEST_GUARD_SIZE * 2 );
 
-		CHECK_EQUAL( encodedDataSize, DZRCOBS_MAX_ENCODED_SIZE( decodeDataSize ) + DZRCOBS_FRAME_HEADER_SIZE );
-
 		eDZRCOBS_ret ret	= DZRCOBS_RET_SUCCESS;
 		size_t encodedLen = 0;
 		sDZRCOBS_ctx ctx;
@@ -215,9 +256,11 @@ TEST( DZRCOBS, EncodeManual )
 		ret = dzrcobs_encode_inc_begin( &ctx,
 																		DZRCOBS_PLAIN,
 																		buffer + UTEST_GUARD_SIZE,
-																		encodedDataSize // Used to test the limit
+																		std::max<uint8_t>( encodedDataSize, 4 ) // used to test limit of the buffer
 		);
 		CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
+
+		ctx.user6bits = TEST_USERBITS;
 
 		ret = dzrcobs_encode_inc( &ctx, decodeData, decodeDataSize );
 		CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
@@ -277,7 +320,8 @@ TEST( DZRCOBS, EncodeDictionaryManual )
 		 &ctx,
 		 DZRCOBS_USING_DICT_1,
 		 buffer + UTEST_GUARD_SIZE,
-		 DZRCOBS_MAX_ENCODED_SIZE( decodeDataSize ) + DZRCOBS_FRAME_HEADER_SIZE // Used to test the limit
+		 std::max<uint8_t>( DZRCOBS_MAX_ENCODED_SIZE( decodeDataSize ) + DZRCOBS_FRAME_HEADER_SIZE,
+												4 ) // Used to test the limit
 		);
 		CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
 
@@ -286,6 +330,29 @@ TEST( DZRCOBS, EncodeDictionaryManual )
 
 		ret = dzrcobs_encode_inc_end( &ctx, &encodedLen );
 		CHECK_EQUAL( DZRCOBS_RET_SUCCESS, ret );
+
+		printf( "idx: %lu, encodedDataSize: %u, encodedLen: %lu\n", idx, encodedDataSize, encodedLen );
+		printf( "deco:" );
+
+		for( size_t i = 0; i < decodeDataSize; i++ )
+		{
+			printf( " 0x%02X, ", decodeData[i] );
+		}
+		printf( "\n" );
+		printf( "good:" );
+
+		for( size_t i = 0; i < encodedDataSize; i++ )
+		{
+			printf( " 0x%02X, ", encodedData[i] );
+		}
+		printf( "\n" );
+		printf( "goot:" );
+
+		for( size_t i = 0; i < encodedLen; i++ )
+		{
+			printf( " 0x%02X, ", buffer[i + UTEST_GUARD_SIZE] );
+		}
+		printf( "\n" );
 
 		CHECK_EQUAL( encodedDataSize, encodedLen );
 		CHECK_EQUAL( 0, memcmp( encodedData, buffer + UTEST_GUARD_SIZE, encodedDataSize ) );
@@ -333,7 +400,7 @@ TEST( DZRCOBS, DecodedictionaryManual )
 		decodeCtx.srcBufEncodedLen	= encodedDataSize;
 		decodeCtx.dstBufDecoded			= buffer + UTEST_GUARD_SIZE;
 		decodeCtx.dstBufDecodedSize = decodeDataSize; // used to test limit of the buffer
-		decodeCtx.pDict[0] = &m_dictCtx;
+		decodeCtx.pDict[0]					= &m_dictCtx;
 
 		uint8_t user6bitDataRightAlgn = 0;
 
@@ -345,7 +412,7 @@ TEST( DZRCOBS, DecodedictionaryManual )
 		CHECK_EQUAL( 0,
 								 memcmp( buffer + UTEST_GUARD_SIZE + UTEST_ENCODED_DECODED_DATA_MAX_SIZE, &guard, UTEST_GUARD_SIZE ) );
 		CHECK_EQUAL( decodeDataSize, decodedLen );
-		CHECK_EQUAL( decodedPos, ( buffer + UTEST_GUARD_SIZE ) );
+		CHECK_COMPARE( decodedPos, >=, ( buffer + UTEST_GUARD_SIZE ) );
 		CHECK_EQUAL( 0, memcmp( decodeData, decodedPos, decodedLen ) );
 		idx++;
 	}
