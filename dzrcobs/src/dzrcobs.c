@@ -113,6 +113,7 @@ eDZRCOBS_ret dzrcobs_encode_inc_end( sDZRCOBS_ctx *aCtx, size_t *aOutSizeEncoded
 		return DZRCOBS_RET_ERR_OVERFLOW;
 	}
 
+	// Add last tracked zero code
 	if( ( aCtx->encoding == DZRCOBS_PLAIN ) || ( aCtx->previousCode != DZRCOBS_PREVIOUS_CODE_DICTIONARY ) )
 	{
 		DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
@@ -124,6 +125,7 @@ eDZRCOBS_ret dzrcobs_encode_inc_end( sDZRCOBS_ctx *aCtx, size_t *aOutSizeEncoded
 		*aCtx->pCurDst++ = curCode;
 	}
 
+	// Add (tail) header info
 	const uint8_t encodingByte = (uint8_t)( aCtx->user6bits << 2 ) | ( (uint8_t)aCtx->encoding & 0x03 );
 
 	DZRCOBS_ASSERT( encodingByte != 0 );
@@ -138,6 +140,7 @@ eDZRCOBS_ret dzrcobs_encode_inc_end( sDZRCOBS_ctx *aCtx, size_t *aOutSizeEncoded
 	DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
 	*aCtx->pCurDst++ = ( finalCrc == 0x00 ) ? DZRCOBS_CRC_VALUE_WHEN_CRC_IS_ZERO : finalCrc; // Avoid zero ending CRC.
 
+	// Calc encoded size
 	*aOutSizeEncoded = (size_t)( aCtx->pCurDst - aCtx->pDst );
 
 	aCtx->encFunc = NULL;
@@ -174,6 +177,10 @@ eDZRCOBS_ret dzrcobs_encode_inc( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, siz
 
 eDZRCOBS_ret dzrcobs_encode_inc_plain( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aSrcBufSize )
 {
+	DZRCOBS_ASSERT( aCtx != NULL );
+	DZRCOBS_ASSERT( aSrcBuf != NULL );
+	DZRCOBS_ASSERT( aSrcBufSize > 0 );
+
 	uint8_t *curDst = aCtx->pCurDst;
 
 #ifdef ASAP_IS_DEBUG_BUILD
@@ -199,8 +206,10 @@ eDZRCOBS_ret dzrcobs_encode_inc_plain( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBu
 				aCtx->crc = DZRCOBS_CRC( aCtx->crc, curCode );
 				*curDst++ = curCode;
 			}
-
-			aCtx->isFirstByteInTheBuffer = false;
+			else
+			{
+				aCtx->isFirstByteInTheBuffer = false;
+			}
 
 			curCode = 1;
 		}
@@ -214,7 +223,7 @@ eDZRCOBS_ret dzrcobs_encode_inc_plain( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBu
 			*curDst++ = byte;
 			curCode++;
 
-			if( curCode == DZRCOBS_CODE_JUMP )
+			if( curCode == DZRCOBS_CODE_JUMP_PLAIN )
 			{
 				DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
 
@@ -249,7 +258,8 @@ eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *a
 	while( aSrcBufSize )
 	{
 		size_t keySizeFound = 0;
-		uint8_t foundIdx		= DZRCOBS_Dictionary_Search( pDict, aSrcBuf, aSrcBufSize, &keySizeFound );
+
+		uint8_t foundIdx = DZRCOBS_Dictionary_Search( pDict, aSrcBuf, aSrcBufSize, &keySizeFound );
 
 		if( foundIdx )
 		{
@@ -282,7 +292,8 @@ eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *a
 			foundIdx -= 1; // remove base index
 			const uint8_t dictEntry = DZRCOBS_DICTIONARY_BITMASK | foundIdx;
 
-			aCtx->crc										 = DZRCOBS_CRC( aCtx->crc, dictEntry );
+			aCtx->crc = DZRCOBS_CRC( aCtx->crc, dictEntry );
+
 			aCtx->isFirstByteInTheBuffer = false;
 
 			*curDst++ = dictEntry;
@@ -327,7 +338,6 @@ eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *a
 		}
 		else
 		{
-
 			if( aCtx->previousCode == DZRCOBS_PREVIOUS_CODE_ZERO )
 			{
 				aCtx->pendingMask = DZRCOBS_NEXTCODE_IS_ZERO;

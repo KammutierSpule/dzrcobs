@@ -86,47 +86,75 @@ eDZRCOBS_ret dzrcobs_decode( const sDZRCOBS_decodectx *aDecodeCtx,
 
 	// Get and validate encoding type
 	const eDZRCOBS_encoding encoding = (eDZRCOBS_encoding)( receivedUserEncoding & 0x03 );
-	const sDICT_ctx *pDict					 = NULL;
+
+	const sDICT_ctx *pDict	= NULL;
+	uint8_t jumpCodeBitmask = 0;
 
 	switch( encoding )
 	{
-		// case DZRCOBS_PLAIN:
-		/*
-			while( pReadEncoded >= pBeginEncoded )
+	case DZRCOBS_PLAIN:
+		jumpCodeBitmask = DZRCOBS_CODE_JUMP_PLAIN;
+		break;
+	case DZRCOBS_USING_DICT_1:
+	case DZRCOBS_USING_DICT_2:
+		jumpCodeBitmask = DZRCOBS_CODE_JUMP;
+
+		pDict = aDecodeCtx->pDict[encoding - DZRCOBS_USING_DICT_1];
+		if( pDict == NULL )
+		{
+			return DZRCOBS_RET_ERR_NO_DICTIONARY_TO_DECODE;
+		}
+		break;
+
+	case DZRCOBS_RESERVED:
+	default:
+		return DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD;
+		break;
+	}
+
+	bool is_end_of_code_a_zero = false;
+
+	while( pReadEncoded >= pBeginEncoded )
+	{
+		DZRCOBS_RUN_ONDEBUG( totalRead++ );
+		uint8_t code = *pReadEncoded--;
+
+		if( ( encoding == DZRCOBS_PLAIN ) || ( code < DZRCOBS_DICTIONARY_BITMASK ) )
+		{
+			const bool is_code_jump_delimiter = ( ( code & jumpCodeBitmask ) == jumpCodeBitmask );
+
+			if( !is_code_jump_delimiter )
 			{
-				uint8_t code = *pReadEncoded;
+				is_end_of_code_a_zero = ( ( code & DZRCOBS_NEXTCODE_BITMASK ) == 0 );
+			}
 
-				if( code == 0 )
-				{
-					return DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD;
-				}
+			code &= jumpCodeBitmask;
 
-				if( ( code != DZRCOBS_CODE_JUMP ) &&					// Only adds if the new code is not skipping
-						( pWriteDecoded != pWriteDecodedInitial ) // Only adds if this is not the first run
-				)
-				{
-					pWriteDecoded--;
-					*pWriteDecoded = 0;
+			if( code == 0 )
+			{
+				return DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD;
+			}
 
-					DZRCOBS_RUN_ONDEBUG( totalWrite++ );
-				}
+			code--;
+			if( ( pWriteDecoded - code ) < pBeginDecoded )
+			{
+				return DZRCOBS_RET_ERR_OVERFLOW;
+			}
 
-				code--;
-				if( ( pWriteDecoded - code ) < pBeginDecoded )
-				{
-					return DZRCOBS_RET_ERR_OVERFLOW;
-				}
+			if( code == 0 )
+			{
+				DZRCOBS_RUN_ONDEBUG( totalWrite++ );
 
-				pReadEncoded--;
-
-				DZRCOBS_RUN_ONDEBUG( totalRead++ );
-
+				pWriteDecoded--;
+				*pWriteDecoded = 0;
+			}
+			else
+			{
 				while( code )
 				{
 					code--;
 
 					const uint8_t byte = *pReadEncoded--;
-
 					DZRCOBS_RUN_ONDEBUG( totalRead++ );
 
 					if( byte == 0 )
@@ -139,69 +167,14 @@ eDZRCOBS_ret dzrcobs_decode( const sDZRCOBS_decodectx *aDecodeCtx,
 
 					DZRCOBS_RUN_ONDEBUG( totalWrite++ );
 				}
-			}
-			*/
-		// break;
 
-	case DZRCOBS_USING_DICT_1:
-	case DZRCOBS_USING_DICT_2:
-		pDict = aDecodeCtx->pDict[encoding - DZRCOBS_USING_DICT_1];
-		if( pDict == NULL )
-		{
-			return DZRCOBS_RET_ERR_NO_DICTIONARY_TO_DECODE;
-		}
-
-	case DZRCOBS_PLAIN:
-		while( pReadEncoded >= pBeginEncoded )
-		{
-			DZRCOBS_RUN_ONDEBUG( totalRead++ );
-			uint8_t code = *pReadEncoded--;
-
-			if( ( encoding == DZRCOBS_PLAIN ) || ( code < DZRCOBS_DICTIONARY_BITMASK ) )
-			{
-				const bool is_end_of_code_a_zero = ( code & DZRCOBS_NEXTCODE_BITMASK ) == 0;
-
-				code &= DZRCOBS_CODE_JUMP;
-
-				if( code == 0 )
+				if( is_end_of_code_a_zero )
 				{
-					return DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD;
-				}
+					const bool is_still_data_to_read = ( pReadEncoded >= pBeginEncoded );
 
-				code--;
-				if( ( pWriteDecoded - code ) < pBeginDecoded )
-				{
-					return DZRCOBS_RET_ERR_OVERFLOW;
-				}
+					const bool is_next_byte_a_jump_code = is_still_data_to_read ? ( *pReadEncoded == jumpCodeBitmask ) : false;
 
-				if( code == 0 )
-				{
-					DZRCOBS_RUN_ONDEBUG( totalWrite++ );
-
-					pWriteDecoded--;
-					*pWriteDecoded = 0;
-				}
-				else
-				{
-					while( code )
-					{
-						code--;
-
-						const uint8_t byte = *pReadEncoded--;
-						DZRCOBS_RUN_ONDEBUG( totalRead++ );
-
-						if( byte == 0 )
-						{
-							return DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD;
-						}
-
-						pWriteDecoded--;
-						*pWriteDecoded = byte;
-
-						DZRCOBS_RUN_ONDEBUG( totalWrite++ );
-					}
-
-					if( is_end_of_code_a_zero && ( pReadEncoded >= pBeginEncoded ) )
+					if( !is_next_byte_a_jump_code )
 					{
 						if( ( pWriteDecoded - 1 ) < pBeginDecoded )
 						{
@@ -214,43 +187,37 @@ eDZRCOBS_ret dzrcobs_decode( const sDZRCOBS_decodectx *aDecodeCtx,
 					}
 				}
 			}
-			else
+		}
+		else
+		{
+			const uint8_t dictIdx = ( code & ~DZRCOBS_DICTIONARY_BITMASK );
+
+			uint8_t wordSize = 0;
+
+			const uint8_t *word = DZRCOBS_Dictionary_Get( pDict, dictIdx, &wordSize );
+
+			if( word == NULL )
 			{
-				const uint8_t dictIdx = ( code & ~DZRCOBS_DICTIONARY_BITMASK );
+				return DZRCOBS_RET_ERR_WORD_NOT_FOUND_ON_DICTIONARY;
+			}
 
-				uint8_t wordSize = 0;
+			if( ( pWriteDecoded - wordSize ) < pBeginDecoded )
+			{
+				return DZRCOBS_RET_ERR_OVERFLOW;
+			}
 
-				const uint8_t *word = DZRCOBS_Dictionary_Get( pDict, dictIdx, &wordSize );
+			const uint8_t *wordEnd = word + wordSize;
+			wordEnd--;
 
-				if( word == NULL )
-				{
-					return DZRCOBS_RET_ERR_WORD_NOT_FOUND_ON_DICTIONARY;
-				}
+			while( wordSize )
+			{
+				wordSize--;
+				DZRCOBS_RUN_ONDEBUG( totalWrite++ );
 
-				if( ( pWriteDecoded - wordSize ) < pBeginDecoded )
-				{
-					return DZRCOBS_RET_ERR_OVERFLOW;
-				}
-
-				const uint8_t *wordEnd = word + wordSize;
-				wordEnd--;
-
-				while( wordSize )
-				{
-					wordSize--;
-					DZRCOBS_RUN_ONDEBUG( totalWrite++ );
-
-					pWriteDecoded--;
-					*pWriteDecoded = *wordEnd--;
-				}
+				pWriteDecoded--;
+				*pWriteDecoded = *wordEnd--;
 			}
 		}
-		break;
-
-	case DZRCOBS_RESERVED:
-	default:
-		return DZRCOBS_RET_ERR_BAD_ENCODED_PAYLOAD;
-		break;
 	}
 
 	*aOutDecodedStartPos = pWriteDecoded;

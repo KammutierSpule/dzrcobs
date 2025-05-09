@@ -90,6 +90,7 @@ struct s_DZRCOB_ctx
 #define DZRCOBS_NEXTCODE_IS_ZERO (0x00)
 #define DZRCOBS_NEXTCODE_IS_DICTIONARY (DZRCOBS_NEXTCODE_BITMASK)
 #define DZRCOBS_CODE_JUMP ( 0x3F )
+#define DZRCOBS_CODE_JUMP_PLAIN ( 0x7F )
 
 // Declarations
 // /////////////////////////////////////////////////////////////////////////////
