@@ -298,6 +298,8 @@ eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *a
 			continue;
 		}
 
+		previously_found_a_dictionary = false;
+
 		// Continue with regular plain encoding
 		aSrcBufSize--;
 
@@ -320,12 +322,9 @@ eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *a
 				aCtx->isFirstByteInTheBuffer = false;
 			}
 
-			previously_found_a_dictionary = false;
-
 			curCode = 1;
 
 			aCtx->previousCode = DZRCOBS_PREVIOUS_CODE_ZERO;
-			// aCtx->pendingMask	 = DZRCOBS_NEXTCODE_IS_ZERO;
 		}
 		else
 		{
@@ -340,8 +339,6 @@ eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *a
 					aCtx->pendingMask = DZRCOBS_NEXTCODE_IS_DICTIONARY;
 				}
 			}
-
-			previously_found_a_dictionary = false;
 
 			DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
 
