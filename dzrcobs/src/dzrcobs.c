@@ -199,17 +199,10 @@ eDZRCOBS_ret dzrcobs_encode_inc_plain( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBu
 
 		if( byte == 0 )
 		{
-			if( !aCtx->isFirstByteInTheBuffer )
-			{
-				DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
+			DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
 
-				aCtx->crc = DZRCOBS_CRC( aCtx->crc, curCode );
-				*curDst++ = curCode;
-			}
-			else
-			{
-				aCtx->isFirstByteInTheBuffer = false;
-			}
+			aCtx->crc = DZRCOBS_CRC( aCtx->crc, curCode );
+			*curDst++ = curCode;
 
 			curCode = 1;
 		}
@@ -314,21 +307,19 @@ eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *a
 		{
 			if( aCtx->previousCode != DZRCOBS_PREVIOUS_CODE_DICTIONARY )
 			{
-				if( !aCtx->isFirstByteInTheBuffer )
-				{
-					DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
+				DZRCOBS_RUN_ONDEBUG( aCtx->writeCounter++ );
 
-					curCode = ( curCode == 1 ) ? 0x01 : ( curCode | aCtx->pendingMask );
+				curCode = ( curCode == 1 ) ? 0x01 : ( curCode | aCtx->pendingMask );
 
-					aCtx->crc = DZRCOBS_CRC( aCtx->crc, curCode );
+				aCtx->crc = DZRCOBS_CRC( aCtx->crc, curCode );
 
-					*curDst++ = curCode;
+				*curDst++ = curCode;
 
-					aCtx->pendingMask = DZRCOBS_NEXTCODE_IS_ZERO;
-				}
+				aCtx->pendingMask = DZRCOBS_NEXTCODE_IS_ZERO;
 
 				aCtx->isFirstByteInTheBuffer = false;
 			}
+
 			previously_found_a_dictionary = false;
 
 			curCode = 1;

@@ -143,6 +143,12 @@ eDZRCOBS_ret dzrcobs_decode( const sDZRCOBS_decodectx *aDecodeCtx,
 
 			if( code == 0 )
 			{
+				const bool is_read_data_remain = ( pReadEncoded >= pBeginEncoded );
+				if( !is_read_data_remain )
+				{
+					break;
+				}
+
 				DZRCOBS_RUN_ONDEBUG( totalWrite++ );
 
 				pWriteDecoded--;
@@ -172,18 +178,20 @@ eDZRCOBS_ret dzrcobs_decode( const sDZRCOBS_decodectx *aDecodeCtx,
 				{
 					const bool is_still_data_to_read = ( pReadEncoded >= pBeginEncoded );
 
-					const bool is_next_byte_a_jump_code = is_still_data_to_read ? ( *pReadEncoded == jumpCodeBitmask ) : false;
-
-					if( !is_next_byte_a_jump_code )
+					if( is_still_data_to_read )
 					{
-						if( ( pWriteDecoded - 1 ) < pBeginDecoded )
+						const bool is_next_byte_a_jump_code = *pReadEncoded == jumpCodeBitmask;
+						if( !is_next_byte_a_jump_code )
 						{
-							return DZRCOBS_RET_ERR_OVERFLOW;
-						}
+							if( ( pWriteDecoded - 1 ) < pBeginDecoded )
+							{
+								return DZRCOBS_RET_ERR_OVERFLOW;
+							}
 
-						pWriteDecoded--;
-						*pWriteDecoded = 0;
-						DZRCOBS_RUN_ONDEBUG( totalWrite++ );
+							pWriteDecoded--;
+							*pWriteDecoded = 0;
+							DZRCOBS_RUN_ONDEBUG( totalWrite++ );
+						}
 					}
 				}
 			}
