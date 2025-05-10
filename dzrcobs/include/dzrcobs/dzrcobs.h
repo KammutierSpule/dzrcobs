@@ -78,7 +78,7 @@ struct s_DZRCOB_ctx
 	size_t writeCounter; ///< Current destiny counter, for debug
 };
 
-#define DZRCOBS_ONE_BYTE_OVERHEAD_EVERY ( 126 )
+#define DZRCOBS_ONE_BYTE_OVERHEAD_EVERY ( 63 )
 #define Z_DZRCOBS_DIV_ROUND_UP( n, d ) ( ( ( n ) + ( d ) - 1 ) / ( d ) )
 #define DZRCOBS_MAX_OVERHEAD( size ) Z_DZRCOBS_DIV_ROUND_UP( ( size ), DZRCOBS_ONE_BYTE_OVERHEAD_EVERY )
 #define DZRCOBS_MAX_ENCODED_SIZE( size ) ( ( size ) + DZRCOBS_MAX_OVERHEAD( ( size ) ) + ( ( size ) == 0 ) )
