@@ -252,7 +252,7 @@ eDZRCOBS_ret dzrcobs_encode_inc_dictionary( sDZRCOBS_ctx *aCtx, const uint8_t *a
 	{
 		size_t keySizeFound = 0;
 
-		uint8_t foundIdx = DZRCOBS_Dictionary_Search( pDict, aSrcBuf, aSrcBufSize, &keySizeFound );
+		uint8_t foundIdx = dzrcobs_dictionary_search( pDict, aSrcBuf, aSrcBufSize, &keySizeFound );
 
 		if( foundIdx )
 		{

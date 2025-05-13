@@ -89,7 +89,7 @@ typedef enum e_DICT_ret
  * @retval DICT_INVALID_WORDCOUNTING Word counting exceeded.
  * @retval DICT_INVALID_WORDSIZE If there is an invalid word size
  */
-eDICTVALID_ret DZRCOBS_Dictionary_IsValid( const char *aDictionary, size_t aDictionarySize );
+eDICTVALID_ret dzrcobs_dictionary_isvalid( const char *aDictionary, size_t aDictionarySize );
 
 /**
  * @brief Initialize a dictionary context
@@ -99,7 +99,7 @@ eDICTVALID_ret DZRCOBS_Dictionary_IsValid( const char *aDictionary, size_t aDict
  * @param aDictionarySize Size of dictionary string
  * @return eDICT_ret DICT_RET_SUCCESS if all good with parameters
  */
-eDICT_ret DZRCOBS_Dictionary_Init( sDICT_ctx *aCtx, const char *aDictionary, size_t aDictionarySize );
+eDICT_ret dzrcobs_dictionary_init( sDICT_ctx *aCtx, const char *aDictionary, size_t aDictionarySize );
 
 /**
  * @brief Search for a Key in the dictionary
@@ -110,7 +110,7 @@ eDICT_ret DZRCOBS_Dictionary_Init( sDICT_ctx *aCtx, const char *aDictionary, siz
  * @param aOutKeySizeFound The output with the key size found (2..5)
  * @return uint8_t 0 not found, 1..126 index of the key found (1 index based)
  */
-uint8_t DZRCOBS_Dictionary_Search( const sDICT_ctx *aCtx,
+uint8_t dzrcobs_dictionary_search( const sDICT_ctx *aCtx,
 																	 const uint8_t *aSearchKey,
 																	 size_t aSearchKeySize,
 																	 size_t *aOutKeySizeFound );
@@ -123,7 +123,7 @@ uint8_t DZRCOBS_Dictionary_Search( const sDICT_ctx *aCtx,
  * @param aOutWordSize pointer to store the size in bytes of the word
  * @return uint8_t* A pointer to the word, NULL if invalid aIndex is givin
  */
-const uint8_t *DZRCOBS_Dictionary_Get( const sDICT_ctx *aCtx, uint8_t aIndex, uint8_t *aOutWordSize );
+const uint8_t *dzrcobs_dictionary_get( const sDICT_ctx *aCtx, uint8_t aIndex, uint8_t *aOutWordSize );
 
 // External declaration of default dictionary
 extern const char G_DZRCOBS_DefaultDictionary[];

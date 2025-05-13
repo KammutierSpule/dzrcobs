@@ -296,7 +296,7 @@ TEST( DZRCOBS, EncodeDictionaryManual )
 
 	sDICT_ctx dictCtx;
 
-	eDICT_ret ret = DZRCOBS_Dictionary_Init( &dictCtx, s_TEST_Dictionary1, s_TEST_Dictionary1_size );
+	eDICT_ret ret = dzrcobs_dictionary_init( &dictCtx, s_TEST_Dictionary1, s_TEST_Dictionary1_size );
 	CHECK_EQUAL( DICT_RET_SUCCESS, ret );
 
 	sDZRCOBS_ctx ctx;
@@ -378,7 +378,7 @@ TEST( DZRCOBS, DecodedictionaryManual )
 {
 	sDICT_ctx dictCtx;
 
-	eDICT_ret ret = DZRCOBS_Dictionary_Init( &dictCtx, s_TEST_Dictionary1, s_TEST_Dictionary1_size );
+	eDICT_ret ret = dzrcobs_dictionary_init( &dictCtx, s_TEST_Dictionary1, s_TEST_Dictionary1_size );
 	CHECK_EQUAL( DICT_RET_SUCCESS, ret );
 
 	size_t idx									 = 0;
@@ -700,7 +700,7 @@ TEST( DZRCOBS, EncodeDecodeLongRandomDictionary )
 {
 	sDICT_ctx dictCtx;
 
-	eDICT_ret dict_ret = DZRCOBS_Dictionary_Init( &dictCtx, s_TEST_Dictionary1, s_TEST_Dictionary1_size );
+	eDICT_ret dict_ret = dzrcobs_dictionary_init( &dictCtx, s_TEST_Dictionary1, s_TEST_Dictionary1_size );
 	CHECK_EQUAL( DICT_RET_SUCCESS, dict_ret );
 
 	// Prepare

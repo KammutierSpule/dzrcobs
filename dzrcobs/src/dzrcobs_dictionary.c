@@ -21,7 +21,7 @@
 #include <string.h>
 #include "dzrcobs_assert.h"
 
-eDICT_ret DZRCOBS_Dictionary_Init( sDICT_ctx *aCtx, const char *aDictionary, size_t aDictionarySize )
+eDICT_ret dzrcobs_dictionary_init( sDICT_ctx *aCtx, const char *aDictionary, size_t aDictionarySize )
 {
 	if( ( !aCtx ) || ( !aDictionary ) || ( aDictionarySize < 3 ) )
 	{
@@ -32,7 +32,7 @@ eDICT_ret DZRCOBS_Dictionary_Init( sDICT_ctx *aCtx, const char *aDictionary, siz
 
 	aCtx->minWordSize = 0xFF;
 
-	if( DZRCOBS_Dictionary_IsValid( aDictionary, aDictionarySize ) != DICT_IS_VALID )
+	if( dzrcobs_dictionary_isvalid( aDictionary, aDictionarySize ) != DICT_IS_VALID )
 	{
 		return DICT_RET_ERR_INVALID;
 	}
@@ -102,7 +102,7 @@ eDICT_ret DZRCOBS_Dictionary_Init( sDICT_ctx *aCtx, const char *aDictionary, siz
 #define DZRCOBS_MAX_DICT_WORD_SIZE ( 5 )
 #define DZRCOBS_MAX_DICT_WORD_COUNTING ( 126 )
 
-eDICTVALID_ret DZRCOBS_Dictionary_IsValid( const char *aDictionary, size_t aDictionarySize )
+eDICTVALID_ret dzrcobs_dictionary_isvalid( const char *aDictionary, size_t aDictionarySize )
 {
 	const char *pDictBufferEnd = aDictionary + aDictionarySize;
 
@@ -227,7 +227,7 @@ uint8_t DZRCOBS_Dictionary_SearchKeyOnEntry( const uint8_t *aSearchKey, const sD
 	return 0;
 }
 
-uint8_t DZRCOBS_Dictionary_Search( const sDICT_ctx *aCtx,
+uint8_t dzrcobs_dictionary_search( const sDICT_ctx *aCtx,
 																	 const uint8_t *aSearchKey,
 																	 size_t aSearchKeySize,
 																	 size_t *aOutKeySizeFound )
@@ -273,7 +273,7 @@ uint8_t DZRCOBS_Dictionary_Search( const sDICT_ctx *aCtx,
 	return 0;
 }
 
-const uint8_t *DZRCOBS_Dictionary_Get( const sDICT_ctx *aCtx, uint8_t aIndex, uint8_t *aOutWordSize )
+const uint8_t *dzrcobs_dictionary_get( const sDICT_ctx *aCtx, uint8_t aIndex, uint8_t *aOutWordSize )
 {
 	DZRCOBS_ASSERT( aCtx != NULL );
 	DZRCOBS_ASSERT( aIndex < 126 );

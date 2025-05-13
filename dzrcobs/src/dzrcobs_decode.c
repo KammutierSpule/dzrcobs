@@ -202,7 +202,7 @@ eDZRCOBS_ret dzrcobs_decode( const sDZRCOBS_decodectx *aDecodeCtx,
 
 			uint8_t wordSize = 0;
 
-			const uint8_t *word = DZRCOBS_Dictionary_Get( pDict, dictIdx, &wordSize );
+			const uint8_t *word = dzrcobs_dictionary_get( pDict, dictIdx, &wordSize );
 
 			if( word == NULL )
 			{

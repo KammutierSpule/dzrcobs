@@ -61,10 +61,10 @@ const size_t s_TEST_Dictionary_size = sizeof( s_TEST_Dictionary );
 TEST_GROUP( DICTIONARY ){
 	void setup()
 	{
-	  eDICTVALID_ret dictRet = DZRCOBS_Dictionary_IsValid( s_TEST_Dictionary, s_TEST_Dictionary_size );
+	  eDICTVALID_ret dictRet = dzrcobs_dictionary_isvalid( s_TEST_Dictionary, s_TEST_Dictionary_size );
 	  CHECK_EQUAL( DICT_IS_VALID, dictRet );
 
-    eDICT_ret ret = DZRCOBS_Dictionary_Init( &m_dictCtx, s_TEST_Dictionary, s_TEST_Dictionary_size );
+    eDICT_ret ret = dzrcobs_dictionary_init( &m_dictCtx, s_TEST_Dictionary, s_TEST_Dictionary_size );
     CHECK_EQUAL( DICT_RET_SUCCESS, ret );
 	}
 
@@ -94,7 +94,7 @@ TEST_GROUP( DICTIONARY ){
 TEST( DICTIONARY, InternalDictionaryValidation )
 // NOLINTEND
 {
-	eDICTVALID_ret ret = DZRCOBS_Dictionary_IsValid( G_DZRCOBS_DefaultDictionary, G_DZRCOBS_DefaultDictionary_size );
+	eDICTVALID_ret ret = dzrcobs_dictionary_isvalid( G_DZRCOBS_DefaultDictionary, G_DZRCOBS_DefaultDictionary_size );
 	CHECK_EQUAL( DICT_IS_VALID, ret );
 }
 
@@ -160,10 +160,10 @@ TEST( DICTIONARY, SearchKey )
 	uint8_t ret = 0;
 	size_t keySizeFound;
 
-	ret = DZRCOBS_Dictionary_Search( &m_dictCtx, ( uint8_t[] ){ 0x00, 0x01 }, 2, &keySizeFound );
+	ret = dzrcobs_dictionary_search( &m_dictCtx, ( uint8_t[] ){ 0x00, 0x01 }, 2, &keySizeFound );
 	CHECK_EQUAL( 0, ret );
 
-	ret = DZRCOBS_Dictionary_Search( &m_dictCtx, ( uint8_t[] ){ 0x01, 0x00, 0xFF }, 3, &keySizeFound );
+	ret = dzrcobs_dictionary_search( &m_dictCtx, ( uint8_t[] ){ 0x01, 0x00, 0xFF }, 3, &keySizeFound );
 	CHECK_EQUAL( 1, ret );
   CHECK_EQUAL( 2, keySizeFound );
 }
