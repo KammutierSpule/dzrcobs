@@ -1,6 +1,6 @@
 // /////////////////////////////////////////////////////////////////////////////
 ///	@file dzrcobs_decode.h
-///	@brief
+///	@brief Dictionary compression with Reverse-COBS dencoding declarations
 ///
 ///	@par  Plataform Target:	Any
 /// @par  Tab Size: 2
@@ -18,8 +18,6 @@
 
 // Includes
 // /////////////////////////////////////////////////////////////////////////////
-#include <stddef.h>
-#include <stdint.h>
 #include "dzrcobs.h"
 #include "dzrcobs_dictionary.h"
 

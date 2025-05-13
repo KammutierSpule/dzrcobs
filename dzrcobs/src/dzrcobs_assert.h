@@ -2,7 +2,6 @@
 ///	@file dzrcobs_assert.h
 ///	@brief Assert declaration
 ///
-///
 ///	@par  Plataform Target:	Any
 /// @par  Tab Size: 2
 ///

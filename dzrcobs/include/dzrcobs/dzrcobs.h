@@ -1,6 +1,6 @@
 // /////////////////////////////////////////////////////////////////////////////
 ///	@file dzrcobs.h
-///	@brief
+///	@brief Dictionary compression with Reverse-COBS encoding declarations
 ///
 ///	@par  Plataform Target:	Any
 /// @par  Tab Size: 2

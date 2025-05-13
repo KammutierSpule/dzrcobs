@@ -346,7 +346,7 @@ TEST( RCOBS, EncodeLongBuffer )
 	static const uint32_t guard = ( UTEST_GUARD_BYTE << 24 ) | ( UTEST_GUARD_BYTE << 16 ) | ( UTEST_GUARD_BYTE << 8 ) |
 																( UTEST_GUARD_BYTE << 0 );
 
-	memset( buffer, UTEST_GUARD_BYTE, UTEST_ENCODED_DECODED_DATA_MAX_SIZE + UTEST_GUARD_SIZE * 2 );
+	memset( buffer, UTEST_GUARD_BYTE, UTEST_ENCODED_DECODED_DATA_MAX_SIZE + ( UTEST_GUARD_SIZE * 2 ) );
 
 	ret = rcobs_encode_inc_begin( &ctx, buffer + UTEST_GUARD_SIZE, UTEST_ENCODED_DECODED_DATA_MAX_SIZE );
 	CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
@@ -360,10 +360,10 @@ TEST( RCOBS, EncodeLongBuffer )
 		decodedData[i] = rand();
 	}
 
-	ret = rcobs_encode_inc( &ctx, decodedData + ( sizeToEncode / 2 ) * 0, sizeToEncode / 2 );
+	ret = rcobs_encode_inc( &ctx, decodedData + ( ( sizeToEncode / 2 ) * 0 ), sizeToEncode / 2 );
 	CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
 
-	ret = rcobs_encode_inc( &ctx, decodedData + ( sizeToEncode / 2 ) * 1, sizeToEncode / 2 );
+	ret = rcobs_encode_inc( &ctx, decodedData + ( ( sizeToEncode / 2 ) * 1 ), sizeToEncode / 2 );
 	CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
 
 	ret = rcobs_encode_inc_end( &ctx, &sizeEncoded );

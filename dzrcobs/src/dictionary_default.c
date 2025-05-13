@@ -3,7 +3,6 @@
 ///	@brief Default dictionary offered.
 /// Optimized for embedded systems word context, json common tags and sequences,
 /// English letter frequencies based on the following sites:
-/// https://www3.nd.edu/~busiforc/handouts/cryptography/Letter%20Frequencies.html
 /// https://mathcenter.oxford.emory.edu/site/math125/englishLetterFreqs/
 /// http://norvig.com/mayzner.html
 ///

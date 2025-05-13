@@ -29,5 +29,6 @@ Checks: >
     -cppcoreguidelines-avoid-c-arrays,
     -google-readability-casting,
     -modernize-avoid-c-arrays,
+		-modernize-use-auto
 
 HeaderFilterRegex: ".*/[common|logging]/.*"

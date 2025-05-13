@@ -1,6 +1,6 @@
 // /////////////////////////////////////////////////////////////////////////////
 ///	@file rcobs.hpp
-///	@brief
+///	@brief Reverse-COBS encoding declarations
 ///
 ///	@par  Plataform Target:	Any
 /// @par  Tab Size: 2
