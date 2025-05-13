@@ -183,7 +183,7 @@ eDZRCOBS_ret dzrcobs_encode_inc_plain( sDZRCOBS_ctx *aCtx, const uint8_t *aSrcBu
 
 	uint8_t *curDst = aCtx->pCurDst;
 
-#ifdef ASAP_IS_DEBUG_BUILD
+#ifdef IS_DEBUG_BUILD
 	size_t srcReadCounter = 0;
 #endif
 

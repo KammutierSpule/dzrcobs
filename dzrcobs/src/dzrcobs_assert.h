@@ -22,7 +22,7 @@
 
 #ifndef DZRCOBS_ASSERT
 
-#ifdef ASAP_IS_DEBUG_BUILD
+#ifdef IS_DEBUG_BUILD
 #include <assert.h>
 #define DZRCOBS_ASSERT( a ) assert( a )
 #else
@@ -33,7 +33,7 @@
 
 #ifndef DZRCOBS_RUN_ONDEBUG
 
-#ifdef ASAP_IS_DEBUG_BUILD
+#ifdef IS_DEBUG_BUILD
 #define DZRCOBS_RUN_ONDEBUG( a ) ( a )
 #else
 #define DZRCOBS_RUN_ONDEBUG( a )

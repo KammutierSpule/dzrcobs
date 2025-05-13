@@ -45,7 +45,7 @@ eDZRCOBS_ret dzrcobs_decode( const sDZRCOBS_decodectx *aDecodeCtx,
 	uint8_t *pWriteDecodedInitial = aDecodeCtx->dstBufDecoded + aDecodeCtx->dstBufDecodedSize;
 	uint8_t *pWriteDecoded				= pWriteDecodedInitial; // starts out of buffer, will be decremented latter
 
-#ifdef ASAP_IS_DEBUG_BUILD
+#ifdef IS_DEBUG_BUILD
 	size_t totalWrite = 0;
 	size_t totalRead	= 0;
 #endif
