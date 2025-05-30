@@ -5,7 +5,7 @@
 ///	@par  Plataform Target:	Any
 /// @par  Tab Size: 2
 ///
-/// @copyright (C) 2024 Mario Luzeiro All rights reserved.
+/// @copyright (C) 2025 Mario Luzeiro All rights reserved.
 /// @author Mario Luzeiro <mluzeiro@ua.pt>
 ///
 /// @par  License: Distributed under the 3-Clause BSD License. See accompanying
@@ -18,7 +18,10 @@
 // /////////////////////////////////////////////////////////////////////////////
 #include <dzrcobs/rcobs.h>
 #include <stdbool.h>
-#include <stdio.h>
+
+// Definitions
+// /////////////////////////////////////////////////////////////////////////////
+#define RCOBS_CODE_JUMP ( 0xFF )
 
 // Implementation
 // /////////////////////////////////////////////////////////////////////////////
@@ -35,7 +38,7 @@ eRCOBS_ret rcobs_encode_inc_begin( sRCOBS_ctx *aCtx, uint8_t *aDstBuf, size_t aD
 	aCtx->pDstEnd = aDstBuf + aDstBufSize;
 	aCtx->code		= 1;
 
-#ifdef ASAP_IS_DEBUG_BUILD
+#ifdef IS_DEBUG_BUILD
 	aCtx->writeCounter = 0;
 #endif
 
@@ -54,7 +57,7 @@ eRCOBS_ret rcobs_encode_inc_end( sRCOBS_ctx *aCtx, size_t *aOutSizeEncoded )
 		return RCOBS_RET_ERR_OVERFLOW;
 	}
 
-#ifdef ASAP_IS_DEBUG_BUILD
+#ifdef IS_DEBUG_BUILD
 	aCtx->writeCounter++;
 #endif
 
@@ -86,7 +89,7 @@ eRCOBS_ret rcobs_encode_inc( sRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aS
 		return RCOBS_RET_ERR_OVERFLOW;
 	}
 
-#ifdef ASAP_IS_DEBUG_BUILD
+#ifdef IS_DEBUG_BUILD
 	size_t srcReadCounter = 0;
 #endif
 
@@ -96,7 +99,7 @@ eRCOBS_ret rcobs_encode_inc( sRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aS
 	{
 		aSrcBufSize--;
 
-#ifdef ASAP_IS_DEBUG_BUILD
+#ifdef IS_DEBUG_BUILD
 		srcReadCounter++;
 #endif
 
@@ -104,7 +107,7 @@ eRCOBS_ret rcobs_encode_inc( sRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aS
 
 		if( byte == 0 )
 		{
-#ifdef ASAP_IS_DEBUG_BUILD
+#ifdef IS_DEBUG_BUILD
 			aCtx->writeCounter++;
 #endif
 
@@ -113,16 +116,16 @@ eRCOBS_ret rcobs_encode_inc( sRCOBS_ctx *aCtx, const uint8_t *aSrcBuf, size_t aS
 		}
 		else
 		{
-#ifdef ASAP_IS_DEBUG_BUILD
+#ifdef IS_DEBUG_BUILD
 			aCtx->writeCounter++;
 #endif
 
 			*curDst++ = byte;
 			curCode++;
 
-			if( curCode == 0xFF )
+			if( curCode == RCOBS_CODE_JUMP )
 			{
-#ifdef ASAP_IS_DEBUG_BUILD
+#ifdef IS_DEBUG_BUILD
 				aCtx->writeCounter++;
 #endif
 
@@ -158,7 +161,7 @@ eRCOBS_ret rcobs_decode( const uint8_t *aSrcBufEncoded,
 	uint8_t *pWriteDecodedInitial = aDstBufDecoded + aDstBufDecodedSize;
 	uint8_t *pWriteDecoded				= pWriteDecodedInitial; // starts out of buffer, will be decremented latter
 
-#ifdef ASAP_IS_DEBUG_BUILD
+#ifdef IS_DEBUG_BUILD
 	size_t totalWrite = 0;
 	size_t totalRead	= 0;
 #endif
@@ -172,14 +175,14 @@ eRCOBS_ret rcobs_decode( const uint8_t *aSrcBufEncoded,
 			return RCOBS_RET_ERR_BAD_ENCODED_PAYLOAD;
 		}
 
-		if( ( code != 0xFF ) &&												// Only adds if the new code is not skipping
+		if( ( code != RCOBS_CODE_JUMP ) &&						// Only adds if the new code is not skipping
 				( pWriteDecoded != pWriteDecodedInitial ) // Only adds if this is not the first run
 		)
 		{
 			pWriteDecoded--;
 			*pWriteDecoded = 0;
 
-#ifdef ASAP_IS_DEBUG_BUILD
+#ifdef IS_DEBUG_BUILD
 			totalWrite++;
 #endif
 		}
@@ -192,7 +195,7 @@ eRCOBS_ret rcobs_decode( const uint8_t *aSrcBufEncoded,
 
 		pReadEncoded--;
 
-#ifdef ASAP_IS_DEBUG_BUILD
+#ifdef IS_DEBUG_BUILD
 		totalRead++;
 #endif
 
@@ -202,7 +205,7 @@ eRCOBS_ret rcobs_decode( const uint8_t *aSrcBufEncoded,
 
 			const uint8_t byte = *pReadEncoded--;
 
-#ifdef ASAP_IS_DEBUG_BUILD
+#ifdef IS_DEBUG_BUILD
 			totalRead++;
 #endif
 
@@ -214,7 +217,7 @@ eRCOBS_ret rcobs_decode( const uint8_t *aSrcBufEncoded,
 			pWriteDecoded--;
 			*pWriteDecoded = byte;
 
-#ifdef ASAP_IS_DEBUG_BUILD
+#ifdef IS_DEBUG_BUILD
 			totalWrite++;
 #endif
 		}

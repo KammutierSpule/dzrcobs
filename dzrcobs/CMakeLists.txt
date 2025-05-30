@@ -44,8 +44,16 @@ asap_add_library(
   SOURCES
   # Headers
   "include/dzrcobs/rcobs.h"
+  "include/dzrcobs/dzrcobs.h"
+  "include/dzrcobs/dzrcobs_decode.h"
+  "include/dzrcobs/dzrcobs_dictionary.h"
   # Sources
-  "src/rcobs.c")
+  "src/rcobs.c"
+  "src/dzrcobs.c"
+  "src/dzrcobs_decode.c"
+  "src/dictionary_default.c"
+  "src/dzrcobs_dictionary.c"
+  "src/crc8_0xA6.c")
 
 # target_link_libraries(${MODULE_TARGET_NAME} PRIVATE )
 
@@ -66,6 +74,7 @@ asap_create_module_config_files()
 # ------------------------------------------------------------------------------
 
 if(ASAP_BUILD_TESTS)
+  add_compile_definitions(DZRCOBS_USE_DICT=1)
   add_subdirectory(test)
 endif()
 

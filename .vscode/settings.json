@@ -294,9 +294,10 @@
   },
   "terminal.integrated.enableVisualBell": true,
   "files.trimTrailingWhitespace": false,
-  "cpputestTestAdapter.testExecutable": "${workspaceFolder}/out/build/dev-linux/bin/dzrcobs_test;${workspaceFolder}/out/build/dev-linux/bin/dzrcobs_test.exe",
-  "cpputestTestAdapter.testExecutablePath": "${workspaceFolder}/out/build/dev-linux/bin/",
+  "cpputestTestAdapter.testExecutable": "${workspaceFolder}/out/build/dev-linux/bin/dzrcobs_test;${workspaceFolder}/out/build/dev-linux/bin/dzrcobs_test.exe;${workspaceFolder}/out/build/dev-clang/bin/dzrcobs_test;${workspaceFolder}/out/build/dev-clang/bin/dzrcobs_test.exe",
+  //"cpputestTestAdapter.testExecutablePath": "",
   "memory-view.showMemoryPanel": true,
   "coverage-gutters.showGutterCoverage": false,
   "coverage-gutters.showLineCoverage": true,
+  "editor.insertSpaces": false,
 }

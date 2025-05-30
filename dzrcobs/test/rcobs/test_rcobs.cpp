@@ -5,7 +5,7 @@
 ///	@par  Plataform Target:	Tests
 /// @par  Tab Size: 2
 ///
-/// @copyright (C) 2024 Mario Luzeiro All rights reserved.
+/// @copyright (C) 2025 Mario Luzeiro All rights reserved.
 /// @author Mario Luzeiro <mluzeiro@ua.pt>
 ///
 /// @par  License: Distributed under the 3-Clause BSD License. See accompanying
@@ -17,12 +17,12 @@
 // Includes
 // /////////////////////////////////////////////////////////////////////////////
 #include <CppUTest/TestHarness.h>
+#include <CppUTest/UtestMacros.h>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <dzrcobs/rcobs.h>
-#include "CppUTest/UtestMacros.h"
 
 // Definitions
 // /////////////////////////////////////////////////////////////////////////////
@@ -77,7 +77,10 @@ static uint8_t s_rcobs_datatest[] = {
 
 // Tests
 // /////////////////////////////////////////////////////////////////////////////
+
+// NOLINTBEGIN
 TEST( RCOBS, MACRO_RCOBS_ENCODE_MAX )
+// NOLINTEND
 {
 	// COBS requires a minimum of 1 byte overhead,
 	// and a maximum of ⌈n/254⌉ bytes for n data bytes (one byte in 254, rounded
@@ -90,7 +93,9 @@ TEST( RCOBS, MACRO_RCOBS_ENCODE_MAX )
 	CHECK_EQUAL( ( 254 * 2 + 1 ) + ( 1 * 2 ), RCOBS_MAX_ENCODED_SIZE( 254 * 2 ) + 1 );
 }
 
+// NOLINTBEGIN
 TEST( RCOBS, DecodeManual )
+// NOLINTEND
 {
 	size_t idx									 = 0;
 	const uint8_t *pDatatest		 = s_rcobs_datatest;
@@ -134,7 +139,9 @@ TEST( RCOBS, DecodeManual )
 	}
 }
 
+// NOLINTBEGIN
 TEST( RCOBS, EncodeManual )
+// NOLINTEND
 {
 	size_t idx									 = 0;
 	const uint8_t *pDatatest		 = s_rcobs_datatest;
@@ -181,7 +188,9 @@ TEST( RCOBS, EncodeManual )
 	}
 }
 
+// NOLINTBEGIN
 TEST( RCOBS, DecodeInvalidArgs )
+// NOLINTEND
 {
 	eRCOBS_ret ret			= RCOBS_RET_SUCCESS;
 	size_t decodedLen		= 0;
@@ -193,49 +202,53 @@ TEST( RCOBS, DecodeInvalidArgs )
 	ret = rcobs_decode( buffer, 1, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, &decodedPos );
 	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ARG, ret );
 
-	ret = rcobs_decode( NULL, 2, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, &decodedPos );
+	ret = rcobs_decode( nullptr, 2, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, &decodedPos );
 	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ARG, ret );
 
-	ret = rcobs_decode( buffer, 2, NULL, 1, &decodedLen, &decodedPos );
+	ret = rcobs_decode( buffer, 2, nullptr, 1, &decodedLen, &decodedPos );
 	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ARG, ret );
 
-	ret = rcobs_decode( buffer, 2, buffer + UTEST_GUARD_SIZE, 1, NULL, &decodedPos );
+	ret = rcobs_decode( buffer, 2, buffer + UTEST_GUARD_SIZE, 1, nullptr, &decodedPos );
 	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ARG, ret );
 
-	ret = rcobs_decode( buffer, 2, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, NULL );
+	ret = rcobs_decode( buffer, 2, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, nullptr );
 	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ARG, ret );
 }
 
+// NOLINTBEGIN
 TEST( RCOBS, DecodeInvalidPayload )
+// NOLINTEND
 {
 	eRCOBS_ret ret			= RCOBS_RET_SUCCESS;
 	size_t decodedLen		= 0;
 	uint8_t *decodedPos = nullptr;
 
-  buffer[UTEST_GUARD_SIZE + 0] = 0;
-  buffer[UTEST_GUARD_SIZE + 1] = 0;
+	buffer[UTEST_GUARD_SIZE + 0] = 0;
+	buffer[UTEST_GUARD_SIZE + 1] = 0;
 	ret = rcobs_decode( buffer + UTEST_GUARD_SIZE, 2, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, &decodedPos );
 	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ENCODED_PAYLOAD, ret );
 
-  buffer[UTEST_GUARD_SIZE + 0] = 0;
-  buffer[UTEST_GUARD_SIZE + 1] = 1;
+	buffer[UTEST_GUARD_SIZE + 0] = 0;
+	buffer[UTEST_GUARD_SIZE + 1] = 1;
 	ret = rcobs_decode( buffer + UTEST_GUARD_SIZE, 2, buffer + UTEST_GUARD_SIZE, 1, &decodedLen, &decodedPos );
 	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ENCODED_PAYLOAD, ret );
 
-  buffer[UTEST_GUARD_SIZE + 0] = 0;
-  buffer[UTEST_GUARD_SIZE + 1] = 1;
-  buffer[UTEST_GUARD_SIZE + 2] = 3;
+	buffer[UTEST_GUARD_SIZE + 0] = 0;
+	buffer[UTEST_GUARD_SIZE + 1] = 1;
+	buffer[UTEST_GUARD_SIZE + 2] = 3;
 	ret = rcobs_decode( buffer + UTEST_GUARD_SIZE, 3, buffer + UTEST_GUARD_SIZE, 2, &decodedLen, &decodedPos );
 	CHECK_EQUAL( RCOBS_RET_ERR_BAD_ENCODED_PAYLOAD, ret );
 
-  buffer[UTEST_GUARD_SIZE + 0] = 1;
-  buffer[UTEST_GUARD_SIZE + 1] = 1;
-  buffer[UTEST_GUARD_SIZE + 2] = 4;
+	buffer[UTEST_GUARD_SIZE + 0] = 1;
+	buffer[UTEST_GUARD_SIZE + 1] = 1;
+	buffer[UTEST_GUARD_SIZE + 2] = 4;
 	ret = rcobs_decode( buffer + UTEST_GUARD_SIZE, 3, buffer + UTEST_GUARD_SIZE, 2, &decodedLen, &decodedPos );
 	CHECK_EQUAL( RCOBS_RET_ERR_OVERFLOW, ret );
 }
 
+// NOLINTBEGIN
 TEST( RCOBS, EncodeBeginInvalidArgs )
+// NOLINTEND
 {
 	eRCOBS_ret ret = RCOBS_RET_SUCCESS;
 	sRCOBS_ctx ctx;
@@ -246,39 +259,45 @@ TEST( RCOBS, EncodeBeginInvalidArgs )
 	ret = rcobs_encode_inc_begin( &ctx, buffer, 1 );
 	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "buffer length <2 must fail" );
 
-	ret = rcobs_encode_inc_begin( &ctx, NULL, 3 );
+	ret = rcobs_encode_inc_begin( &ctx, nullptr, 3 );
 	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
 
-	ret = rcobs_encode_inc_begin( NULL, buffer, 3 );
+	ret = rcobs_encode_inc_begin( nullptr, buffer, 3 );
 	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
 }
 
+// NOLINTBEGIN
 TEST( RCOBS, EncodeIncInvalidArgs )
+// NOLINTEND
 {
 	eRCOBS_ret ret = RCOBS_RET_SUCCESS;
 	sRCOBS_ctx ctx;
 
-	ret = rcobs_encode_inc( NULL, buffer, 1 );
+	ret = rcobs_encode_inc( nullptr, buffer, 1 );
 	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
 
-	ret = rcobs_encode_inc( &ctx, NULL, 1 );
+	ret = rcobs_encode_inc( &ctx, nullptr, 1 );
 	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
 }
 
+// NOLINTBEGIN
 TEST( RCOBS, EncodeEndInvalidArgs )
+// NOLINTEND
 {
 	eRCOBS_ret ret = RCOBS_RET_SUCCESS;
 	sRCOBS_ctx ctx;
 	size_t sizeEncoded = 0;
 
-	ret = rcobs_encode_inc_end( &ctx, NULL );
+	ret = rcobs_encode_inc_end( &ctx, nullptr );
 	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
 
-	ret = rcobs_encode_inc_end( NULL, &sizeEncoded );
+	ret = rcobs_encode_inc_end( nullptr, &sizeEncoded );
 	CHECK_EQUAL_TEXT( RCOBS_RET_ERR_BAD_ARG, ret, "NULL input must fail" );
 }
 
+// NOLINTBEGIN
 TEST( RCOBS, EncodeOverflow )
+// NOLINTEND
 {
 	eRCOBS_ret ret = RCOBS_RET_SUCCESS;
 	sRCOBS_ctx ctx;
@@ -293,7 +312,9 @@ TEST( RCOBS, EncodeOverflow )
 	CHECK_EQUAL( RCOBS_RET_ERR_OVERFLOW, ret );
 }
 
+// NOLINTBEGIN
 TEST( RCOBS, EncodeFirstOKThenOverflow )
+// NOLINTEND
 {
 	eRCOBS_ret ret = RCOBS_RET_SUCCESS;
 	sRCOBS_ctx ctx;
@@ -314,7 +335,9 @@ TEST( RCOBS, EncodeFirstOKThenOverflow )
 	CHECK_EQUAL( RCOBS_RET_ERR_OVERFLOW, ret );
 }
 
+// NOLINTBEGIN
 TEST( RCOBS, EncodeLongBuffer )
+// NOLINTEND
 {
 	eRCOBS_ret ret = RCOBS_RET_SUCCESS;
 	sRCOBS_ctx ctx;
@@ -323,7 +346,7 @@ TEST( RCOBS, EncodeLongBuffer )
 	static const uint32_t guard = ( UTEST_GUARD_BYTE << 24 ) | ( UTEST_GUARD_BYTE << 16 ) | ( UTEST_GUARD_BYTE << 8 ) |
 																( UTEST_GUARD_BYTE << 0 );
 
-	memset( buffer, UTEST_GUARD_BYTE, UTEST_ENCODED_DECODED_DATA_MAX_SIZE + UTEST_GUARD_SIZE * 2 );
+	memset( buffer, UTEST_GUARD_BYTE, UTEST_ENCODED_DECODED_DATA_MAX_SIZE + ( UTEST_GUARD_SIZE * 2 ) );
 
 	ret = rcobs_encode_inc_begin( &ctx, buffer + UTEST_GUARD_SIZE, UTEST_ENCODED_DECODED_DATA_MAX_SIZE );
 	CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
@@ -337,10 +360,10 @@ TEST( RCOBS, EncodeLongBuffer )
 		decodedData[i] = rand();
 	}
 
-	ret = rcobs_encode_inc( &ctx, decodedData + ( sizeToEncode / 2 ) * 0, sizeToEncode / 2 );
+	ret = rcobs_encode_inc( &ctx, decodedData + ( ( sizeToEncode / 2 ) * 0 ), sizeToEncode / 2 );
 	CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
 
-	ret = rcobs_encode_inc( &ctx, decodedData + ( sizeToEncode / 2 ) * 1, sizeToEncode / 2 );
+	ret = rcobs_encode_inc( &ctx, decodedData + ( ( sizeToEncode / 2 ) * 1 ), sizeToEncode / 2 );
 	CHECK_EQUAL( RCOBS_RET_SUCCESS, ret );
 
 	ret = rcobs_encode_inc_end( &ctx, &sizeEncoded );
@@ -349,8 +372,8 @@ TEST( RCOBS, EncodeLongBuffer )
 	CHECK_EQUAL( 0, memcmp( buffer, &guard, UTEST_GUARD_SIZE ) );
 	CHECK_EQUAL( 0, memcmp( buffer + UTEST_GUARD_SIZE + UTEST_ENCODED_DECODED_DATA_MAX_SIZE, &guard, UTEST_GUARD_SIZE ) );
 
-	uint8_t *decodedBuffer = new uint8_t[UTEST_GUARD_SIZE + ( sizeToEncode + 1 ) + UTEST_GUARD_SIZE];
-	uint8_t *decodedBufferPos;
+	uint8_t *decodedBuffer		= new uint8_t[UTEST_GUARD_SIZE + ( sizeToEncode + 1 ) + UTEST_GUARD_SIZE];
+	uint8_t *decodedBufferPos = nullptr;
 
 	size_t sizeDecoded = 0;
 	ret =

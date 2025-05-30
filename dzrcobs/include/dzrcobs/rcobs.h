@@ -1,11 +1,11 @@
 // /////////////////////////////////////////////////////////////////////////////
 ///	@file rcobs.hpp
-///	@brief
+///	@brief Reverse-COBS encoding declarations
 ///
 ///	@par  Plataform Target:	Any
 /// @par  Tab Size: 2
 ///
-/// @copyright (C) 2024 Mario Luzeiro All rights reserved.
+/// @copyright (C) 2025 Mario Luzeiro All rights reserved.
 /// @author Mario Luzeiro <mluzeiro@ua.pt>
 ///
 /// @par  License: Distributed under the 3-Clause BSD License. See accompanying
@@ -37,12 +37,12 @@ typedef struct s_RCOB_ctx
 	uint8_t *pDstEnd; ///< Last position pointer 1 position outside buffer range
 	uint8_t code;			///< Current code
 
-#ifdef ASAP_IS_DEBUG_BUILD
+#ifdef IS_DEBUG_BUILD
 	size_t writeCounter; ///< Current destiny counter, for debug
 #endif
 } sRCOBS_ctx;
 
-typedef enum eRCOBS_ret
+typedef enum e_RCOBS_ret
 {
 	RCOBS_RET_SUCCESS = 0,
 	RCOBS_RET_ERR_BAD_ARG,
@@ -50,9 +50,10 @@ typedef enum eRCOBS_ret
 	RCOBS_RET_ERR_BAD_ENCODED_PAYLOAD,
 } eRCOBS_ret;
 
+#define RCOBS_ONE_BYTE_OVERHEAD_EVERY (254)
 #define Z_RCOBS_DIV_ROUND_UP( n, d ) ( ( ( n ) + ( d ) - 1 ) / ( d ) )
-#define RCOBS_MAX_OVERHEAD( size ) Z_RCOBS_DIV_ROUND_UP( ( size ), 254 )
-#define RCOBS_MAX_ENCODED_SIZE( size ) ( ( size ) + RCOBS_MAX_OVERHEAD( ( size ) ) + ( size == 0 ) )
+#define RCOBS_MAX_OVERHEAD( size ) Z_RCOBS_DIV_ROUND_UP( ( size ), RCOBS_ONE_BYTE_OVERHEAD_EVERY )
+#define RCOBS_MAX_ENCODED_SIZE( size ) ( ( size ) + RCOBS_MAX_OVERHEAD( ( size ) ) + ( (size) == 0 ) )
 
 // Declarations
 // /////////////////////////////////////////////////////////////////////////////
@@ -88,7 +89,7 @@ eRCOBS_ret rcobs_encode_inc_end( sRCOBS_ctx *aCtx, size_t *aOutSizeEncoded );
 
 /**
  * @brief Decodes a source encoded buffer. It will place the decoded data
- *        left aligned with the aDstBufDecoded.
+ *        right aligned with the aDstBufDecoded.
  *        Data starts aDstBufDecoded[aDstBufEncodedSize - aOutDecodedLen]
  *        Data ends aDstBufDecoded[aDstBufEncodedSize - 1]
  *        It implicit assumes that the encoded data ends with a 0,
