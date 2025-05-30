@@ -5,7 +5,7 @@
 ///	@par  Plataform Target:	Any
 /// @par  Tab Size: 2
 ///
-/// @copyright (C) 2024 Mario Luzeiro All rights reserved.
+/// @copyright (C) 2025 Mario Luzeiro All rights reserved.
 /// @author Mario Luzeiro <mluzeiro@ua.pt>
 ///
 /// @par  License: Distributed under the 3-Clause BSD License. See accompanying

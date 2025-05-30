@@ -1,8 +1,8 @@
 // /////////////////////////////////////////////////////////////////////////////
-///	@file dzrcobs_assert.h
-///	@brief Assert declaration
+/// @file version.hpp
+/// @brief DZRCOBS version
 ///
-///	@par  Plataform Target:	Any
+/// @par  Plataform Target: Any
 /// @par  Tab Size: 2
 ///
 /// @copyright (C) 2025 Mario Luzeiro All rights reserved.
@@ -13,32 +13,17 @@
 /// SPDX-License-Identifier: BSD-3-Clause
 ///
 // /////////////////////////////////////////////////////////////////////////////
-#ifndef _DZRCOBS_ASSERT_H_
-#define _DZRCOBS_ASSERT_H_
+#ifndef _DZRCOBS_VERSION_H_
+#define _DZRCOBS_VERSION_H_
 
-// Includes
-// /////////////////////////////////////////////////////////////////////////////
+// https://semver.org/
+// "MAJOR version when you make incompatible API changes
+//  MINOR version when you add functionality in a backward compatible manner
+//  PATCH version when you make backward compatible bug fixes"
 
-#ifndef DZRCOBS_ASSERT
-
-#ifdef IS_DEBUG_BUILD
-#include <assert.h>
-#define DZRCOBS_ASSERT( a ) assert( a )
-#else
-#define DZRCOBS_ASSERT( a )
-#endif
-
-#endif
-
-#ifndef DZRCOBS_RUN_ONDEBUG
-
-#ifdef IS_DEBUG_BUILD
-#define DZRCOBS_RUN_ONDEBUG( a ) ( a )
-#else
-#define DZRCOBS_RUN_ONDEBUG( a )
-#endif
-
-#endif
+#define DZRCOBS_VERSION_MAJOR 1
+#define DZRCOBS_VERSION_MINOR 0
+#define DZRCOBS_VERSION_PATCH 0
 
 #endif
 
