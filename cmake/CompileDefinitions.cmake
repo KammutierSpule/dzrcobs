@@ -64,7 +64,7 @@ function(asap_set_compile_definitions target)
 
   # Provide a way to distinguish between debug and release builds via
   # preprocessor define
-  list(APPEND all_definitions "$<$<CONFIG:Debug>:ASAP_IS_DEBUG_BUILD>")
+  list(APPEND all_definitions "$<$<CONFIG:Debug>:IS_DEBUG_BUILD>")
 
   if(MSVC)
     list(APPEND all_definitions "NOMINMAX" "WIN32_LEAN_AND_MEAN=1"

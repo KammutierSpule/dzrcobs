@@ -1,6 +1,5 @@
 {
   "recommendations": [
-    "swyddfa.esbonio",
     "stkb.rewrap",
     "donjayamanne.githistory",
     "eamodio.gitlens",
@@ -17,6 +16,7 @@
     "guyutongxue.cpp-reference",
     "cschlosser.doxdocgen",
     "cheshirekow.cmake-format",
-    "editorconfig.editorconfig"
+    "editorconfig.editorconfig",
+    "sr-team.lcov-generator"
   ]
 }

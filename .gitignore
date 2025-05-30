@@ -5,7 +5,6 @@ build-*/
 _build/
 _build-*/
 cmake-build*/
-out/
 
 .vs
 .sphinx
@@ -237,3 +236,7 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Coverage
+/default.profraw
+/lcov.info

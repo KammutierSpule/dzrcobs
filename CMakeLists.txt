@@ -44,14 +44,14 @@ endif()
 
 # Meta information about the project
 # cmake-format: off
-set(META_PROJECT_NAME        "asap")
-set(META_PROJECT_DESCRIPTION "Instantly start with a fully loaded CMake project")
-set(META_AUTHOR_ORGANIZATION "The Authors")
-set(META_GITHUB_REPO         "https://github.com/abdes/asap")
-set(META_AUTHOR_DOMAIN       "https://github.com/abdes/asap")
-set(META_AUTHOR_MAINTAINER   "Abdessattar Sassi")
-set(META_VERSION_MAJOR       "4")
-set(META_VERSION_MINOR       "7")
+set(META_PROJECT_NAME        "dzrcobs")
+set(META_PROJECT_DESCRIPTION "Dictionary compression with Reverse-COBS encoding")
+set(META_AUTHOR_ORGANIZATION "Mario Luzeiro")
+set(META_GITHUB_REPO         "https://github.com/KammutierSpule/dzrcobs")
+set(META_AUTHOR_DOMAIN       "https://github.com/KammutierSpule/dzrcobs")
+set(META_AUTHOR_MAINTAINER   "Mario Luzeiro")
+set(META_VERSION_MAJOR       "1")
+set(META_VERSION_MINOR       "0")
 set(META_VERSION_PATCH       "0")
 set(META_VERSION_REVISION    "${GIT_REV}")
 set(META_VERSION             "${META_VERSION_MAJOR}.${META_VERSION_MINOR}.${META_VERSION_PATCH}")
@@ -80,13 +80,9 @@ asap_push_project(${META_PROJECT_NAME})
 
 # Project options
 # cmake-format: off
-option(BUILD_SHARED_LIBS        "Build shared instead of static libraries."              ON)
+option(BUILD_SHARED_LIBS        "Build shared instead of static libraries."              OFF)
 option(ASAP_BUILD_TESTS         "Setup target to build and run tests."                   OFF)
 option(ASAP_BUILD_EXAMPLES      "Setup target to build the examples."                    OFF)
-option(ASAP_BUILD_DOCS          "Setup target to build the doxygen and sphinx docs."     ON)
-option(ASAP_WITH_GOOGLE_ASAN    "Instrument code with address sanitizer"                 OFF)
-option(ASAP_WITH_GOOGLE_UBSAN   "Instrument code with undefined behavior sanitizer"      OFF)
-option(ASAP_WITH_GOOGLE_TSAN    "Instrument code with thread sanitizer"                  OFF)
 option(ASAP_WITH_VALGRIND       "Builds targets with valgrind profilers added"           OFF)
 option(USE_CCACHE               "Enable caching of compiled artifacts using ccache"      OFF)
 # cmake-format: on
@@ -144,44 +140,29 @@ configure_file(
 configure_file(.clangd.in ${CMAKE_SOURCE_DIR}/.clangd @ONLY)
 
 # ------------------------------------------------------------------------------
-# Documentation - doxygen, sphinx/breathe/exhale
-# ------------------------------------------------------------------------------
-
-if (ASAP_BUILD_DOCS)
-  # Doxygen
-  set(DOXYGEN_BUILD_DIR "${CMAKE_BINARY_DIR}/dox")
-  include(DoxGeneration)
-
-  # Sphinx/breathe/exhale
-  set(SPHINX_BUILD_DIR "${CMAKE_BINARY_DIR}/sphinx")
-  include(SphinxGeneration)
-endif()
-
-# ------------------------------------------------------------------------------
 # Testing
 # ------------------------------------------------------------------------------
 
 include(CTest)
 
 if(ASAP_BUILD_TESTS)
-  include(GoogleSanitizers)
+
   include(CodeCoverage)
+
   # Enable this target when the project has test cases
   asap_add_code_coverage_all_targets()
+
   include(Valgrind)
 
   cpmaddpackage(
     NAME
-    googletest
+    CppUTest
     GIT_TAG
-    main
+    master
     GITHUB_REPOSITORY
-    google/googletest
+    cpputest/cpputest
     OPTIONS
-    "gtest_force_shared_crt ON"
-    "INSTALL_GTEST OFF")
-
-  include(GoogleTest)
+    "TESTS OFF")
 endif()
 
 # ------------------------------------------------------------------------------
@@ -244,9 +225,7 @@ endif()
 # Project modules
 # ------------------------------------------------------------------------------
 
-add_subdirectory(tools/version-info)
-
-# Add project modules here
+add_subdirectory(dzrcobs)
 
 # ------------------------------------------------------------------------------
 # Code analyzers: clang-tidy, cppcheck, valgrind, sanitizers, etc...
