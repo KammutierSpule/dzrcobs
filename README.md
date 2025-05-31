@@ -13,19 +13,16 @@ Reversed COBS is a variant of the standard COBS encoding that places the length 
 In addition to COBS encoding, a dictionary-based compression scheme is applied to reduce the overall data size of the encoded frame.
 
 ## Use cases and targets
-    - Mid to high-end range microcontrollers.
-    - Transmit data over slow streams (eg: UART) where there is available more CPU power than bandwith.
-    - Reduce payload transmition costs (eg: over GPRS, 4G)
-    - LOG and sensor data storage on non-volatile memory. Reduces storage space taking advantage of repetitive patterns.
+  - Mid to high-end range microcontrollers.
+  - Transmit data over slow streams (eg: UART) where there is available more CPU power than bandwith.
+  - Reduce payload transmition costs (eg: over GPRS, 4G)
+  - LOG and sensor data storage on non-volatile memory. Reduces storage space taking advantage of repetitive patterns.
 
 ## Usage
 To integrate the code on your project, you need to consider only the following two folders:
-
-```
-[dzrcobs](/dzrcobs)
-    [dzrcobs/include](/dzrcobs/include) header files to be added to your include paths.
-    [dzrcobs/src](/dzrcobs/src) source code to be compiled by your project.
-```
+  - [dzrcobs](/dzrcobs)
+  -    [dzrcobs/include](/dzrcobs/include) header files to be added to your include paths.
+  -    [dzrcobs/src](/dzrcobs/src) source code to be compiled by your project.
 
 You may want to perform a [git sparse checkout](https://git-scm.com/docs/git-sparse-checkout) to your project with only those folders.
 
@@ -43,5 +40,4 @@ Any contribution to the project be submitted under the same license of this proj
 
 ## References
 Other related project references:
-
-    - [rCOBS](https://github.com/Dirbaio/rcobs)
+  - [rCOBS](https://github.com/Dirbaio/rcobs)
