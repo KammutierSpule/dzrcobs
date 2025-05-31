@@ -18,6 +18,7 @@
 
 // Includes
 // /////////////////////////////////////////////////////////////////////////////
+#include <stdbool.h>
 #include "dzrcobs_dictionary.h"
 
 // clang-format off
@@ -83,12 +84,12 @@ struct s_DZRCOB_ctx
 #define DZRCOBS_MAX_OVERHEAD( size ) Z_DZRCOBS_DIV_ROUND_UP( ( size ), DZRCOBS_ONE_BYTE_OVERHEAD_EVERY )
 #define DZRCOBS_MAX_ENCODED_SIZE( size ) ( ( size ) + DZRCOBS_MAX_OVERHEAD( ( size ) ) + ( ( size ) == 0 ) )
 
-#define DZRCOBS_CRC_VALUE_WHEN_CRC_IS_ZERO (0xFF)
+#define DZRCOBS_CRC_VALUE_WHEN_CRC_IS_ZERO ( 0xFF )
 
-#define DZRCOBS_DICTIONARY_BITMASK (0x80)
-#define DZRCOBS_NEXTCODE_BITMASK (0x40)
-#define DZRCOBS_NEXTCODE_IS_ZERO (0x00)
-#define DZRCOBS_NEXTCODE_IS_DICTIONARY (DZRCOBS_NEXTCODE_BITMASK)
+#define DZRCOBS_DICTIONARY_BITMASK ( 0x80 )
+#define DZRCOBS_NEXTCODE_BITMASK ( 0x40 )
+#define DZRCOBS_NEXTCODE_IS_ZERO ( 0x00 )
+#define DZRCOBS_NEXTCODE_IS_DICTIONARY ( DZRCOBS_NEXTCODE_BITMASK )
 #define DZRCOBS_CODE_JUMP ( 0x3F )
 #define DZRCOBS_CODE_JUMP_PLAIN ( 0x7F )
 
