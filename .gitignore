@@ -5,6 +5,8 @@ build-*/
 _build/
 _build-*/
 cmake-build*/
+out/
+vcpkg_installed/
 
 .vs
 .sphinx
@@ -236,6 +238,9 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Runtime lock files created by tools/scripts
+*.lock
 
 # Coverage
 /default.profraw

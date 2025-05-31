@@ -22,7 +22,7 @@
 //  PATCH version when you make backward compatible bug fixes"
 
 #define DZRCOBS_VERSION_MAJOR 1
-#define DZRCOBS_VERSION_MINOR 0
+#define DZRCOBS_VERSION_MINOR 1
 #define DZRCOBS_VERSION_PATCH 0
 
 #endif

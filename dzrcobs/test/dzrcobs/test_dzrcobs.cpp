@@ -70,6 +70,19 @@ TEST_GROUP( DZRCOBS ){
 // NOLINTEND
 // clang-format on
 
+void debug_dump_buffer( const uint8_t *aBuffer, size_t aBufferSize )
+{
+	printf( "(%lu) {", aBufferSize );
+
+	while( aBufferSize > 0 )
+	{
+		aBufferSize--;
+		printf( "0x%02X ", *aBuffer++ );
+	}
+
+	printf( "}\n" );
+}
+
 // Test data
 // /////////////////////////////////////////////////////////////////////////////
 
@@ -509,9 +522,11 @@ TEST( DZRCOBS, EncodeEndInvalidArgs )
 TEST( DZRCOBS, EncodeDecodeLongSequentialPlain )
 // NOLINTEND
 {
+	static constexpr size_t decodedDataSize = 512;
+
 	// Prepare
-	uint8_t decodedData[512];
-	const size_t decodedDataSize = sizeof( decodedData );
+	uint8_t decodedData[decodedDataSize];
+
 	for( size_t i = 0; i < decodedDataSize; i++ )
 	{
 		decodedData[i] = (uint8_t)( i & 0xFF );
@@ -545,7 +560,7 @@ TEST( DZRCOBS, EncodeDecodeLongSequentialPlain )
 	static const uint32_t guard = ( UTEST_GUARD_BYTE << 24 ) | ( UTEST_GUARD_BYTE << 16 ) | ( UTEST_GUARD_BYTE << 8 ) |
 																( UTEST_GUARD_BYTE << 0 );
 
-	uint8_t decoded_new[UTEST_GUARD_SIZE + 512 + UTEST_GUARD_SIZE];
+	uint8_t decoded_new[UTEST_GUARD_SIZE + decodedDataSize + UTEST_GUARD_SIZE];
 
 	memset( decoded_new, UTEST_GUARD_BYTE, sizeof( decoded_new ) );
 
@@ -553,7 +568,7 @@ TEST( DZRCOBS, EncodeDecodeLongSequentialPlain )
 	decodeCtx.srcBufEncoded			= buffer + UTEST_GUARD_SIZE;
 	decodeCtx.srcBufEncodedLen	= encodedLen;
 	decodeCtx.dstBufDecoded			= decoded_new + UTEST_GUARD_SIZE;
-	decodeCtx.dstBufDecodedSize = 512;
+	decodeCtx.dstBufDecodedSize = decodedDataSize;
 
 	uint8_t user6bitDataRightAlgn = 0;
 
@@ -563,6 +578,19 @@ TEST( DZRCOBS, EncodeDecodeLongSequentialPlain )
 	CHECK_EQUAL( TEST_USERBITS, user6bitDataRightAlgn );
 	CHECK_EQUAL( 0, memcmp( buffer, &guard, UTEST_GUARD_SIZE ) );
 	CHECK_EQUAL( 0, memcmp( buffer + UTEST_GUARD_SIZE + UTEST_ENCODED_DECODED_DATA_MAX_SIZE, &guard, UTEST_GUARD_SIZE ) );
+
+	if( decodedDataSize != decodedLen )
+	{
+		printf( "bufferEncoded " );
+		debug_dump_buffer( buffer + UTEST_GUARD_SIZE, encodedLen );
+
+		printf( "decodedData " );
+		debug_dump_buffer( decodedData, decodedDataSize );
+
+		printf( "decodedPos " );
+		debug_dump_buffer( decodedPos, decodedLen );
+	}
+
 	CHECK_EQUAL( decodedDataSize, decodedLen );
 	CHECK_COMPARE( decodedPos, >=, ( buffer + UTEST_GUARD_SIZE ) );
 	CHECK_EQUAL( 0, memcmp( decodedData, decodedPos, decodedLen ) );
@@ -635,9 +663,11 @@ TEST( DZRCOBS, EncodeDecodeLongDecrementSeqPlain )
 TEST( DZRCOBS, EncodeDecodeLongRandomPlain )
 // NOLINTEND
 {
+	static constexpr size_t decodedDataSize = 512;
+
 	// Prepare
-	uint8_t decodedData[512];
-	const size_t decodedDataSize = sizeof( decodedData );
+	uint8_t decodedData[decodedDataSize];
+
 	for( size_t i = 0; i < decodedDataSize; i++ )
 	{
 		decodedData[i] = (uint8_t)( rand() & 0xFF );
@@ -671,7 +701,7 @@ TEST( DZRCOBS, EncodeDecodeLongRandomPlain )
 	static const uint32_t guard = ( UTEST_GUARD_BYTE << 24 ) | ( UTEST_GUARD_BYTE << 16 ) | ( UTEST_GUARD_BYTE << 8 ) |
 																( UTEST_GUARD_BYTE << 0 );
 
-	uint8_t decoded_new[UTEST_GUARD_SIZE + 512 + UTEST_GUARD_SIZE];
+	uint8_t decoded_new[UTEST_GUARD_SIZE + decodedDataSize + UTEST_GUARD_SIZE];
 
 	memset( decoded_new, UTEST_GUARD_BYTE, sizeof( decoded_new ) );
 
@@ -679,7 +709,7 @@ TEST( DZRCOBS, EncodeDecodeLongRandomPlain )
 	decodeCtx.srcBufEncoded			= buffer + UTEST_GUARD_SIZE;
 	decodeCtx.srcBufEncodedLen	= encodedLen;
 	decodeCtx.dstBufDecoded			= decoded_new + UTEST_GUARD_SIZE;
-	decodeCtx.dstBufDecodedSize = 512;
+	decodeCtx.dstBufDecodedSize = decodedDataSize;
 
 	uint8_t user6bitDataRightAlgn = 0;
 
@@ -689,6 +719,19 @@ TEST( DZRCOBS, EncodeDecodeLongRandomPlain )
 	CHECK_EQUAL( TEST_USERBITS, user6bitDataRightAlgn );
 	CHECK_EQUAL( 0, memcmp( buffer, &guard, UTEST_GUARD_SIZE ) );
 	CHECK_EQUAL( 0, memcmp( buffer + UTEST_GUARD_SIZE + UTEST_ENCODED_DECODED_DATA_MAX_SIZE, &guard, UTEST_GUARD_SIZE ) );
+
+	CHECK_EQUAL( 0, memcmp( decoded_new, &guard, UTEST_GUARD_SIZE ) );
+	CHECK_EQUAL( 0, memcmp( decoded_new + UTEST_GUARD_SIZE + decodedDataSize, &guard, UTEST_GUARD_SIZE ) );
+
+	if( decodedDataSize != decodedLen )
+	{
+		printf( "decodedData " );
+		debug_dump_buffer( decodedData, decodedDataSize );
+
+		printf( "decodedPos " );
+		debug_dump_buffer( decodedPos, decodedLen );
+	}
+
 	CHECK_EQUAL( decodedDataSize, decodedLen );
 	CHECK_COMPARE( decodedPos, >=, ( buffer + UTEST_GUARD_SIZE ) );
 	CHECK_EQUAL( 0, memcmp( decodedData, decodedPos, decodedLen ) );
