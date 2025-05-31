@@ -125,7 +125,7 @@ eDZRCOBS_ret dzrcobs_decode( const sDZRCOBS_decodectx *aDecodeCtx,
 
 			if( !is_code_jump_delimiter )
 			{
-				is_end_of_code_a_zero = ( ( code & DZRCOBS_NEXTCODE_BITMASK ) == 0 );
+				is_end_of_code_a_zero = ( encoding == DZRCOBS_PLAIN ) ? true : ( ( code & DZRCOBS_NEXTCODE_BITMASK ) == 0 );
 			}
 
 			code &= jumpCodeBitmask;
